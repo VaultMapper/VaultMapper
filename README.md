@@ -1,7 +1,7 @@
 # Vault Mapper
-[![Modrinth Downloads](https://img.shields.io/modrinth/dt/vaultmapper?style=for-the-badge&logo=modrinth&color=1bd96a&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fvaultmapper%2F)](https://modrinth.com/mod/vaultmapper/)
-[![CurseForge Downloads](https://img.shields.io/curseforge/dt/1099126?style=for-the-badge&logo=curseforge&color=f16436&link=https%3A%2F%2Fwww.curseforge.com%2Fminecraft%2Fmc-mods%2Fvaultmapper)](https://www.curseforge.com/minecraft/mc-mods/vaultmapper)
-[![GitHub Downloads](https://img.shields.io/github/downloads/NodiumHosting/VaultMapper/total?style=for-the-badge&logo=github)](https://github.com/NodiumHosting/VaultMapper/releases)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/vaultmapper?style=for-the-badge&logo=modrinth&color=1bd96a)](https://modrinth.com/mod/vaultmapper/)
+[![CurseForge Downloads](https://img.shields.io/curseforge/dt/1099126?style=for-the-badge&logo=curseforge&color=f16436)](https://www.curseforge.com/minecraft/mc-mods/vaultmapper)
+[![GitHub Downloads](https://img.shields.io/github/downloads/NodiumHosting/VaultMapper/total?style=for-the-badge&logo=github&color=f0f6fc)](https://github.com/NodiumHosting/VaultMapper/releases)
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/K3K519DLNN)
 
 ### This is an unofficial add-on mod for the [Vault Hunters 3rd Edition](https://www.curseforge.com/minecraft/modpacks/vault-hunters-1-18-2) modpack
