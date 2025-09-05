@@ -48,7 +48,8 @@ public class RoomData {
         this.name = name;
         this.room = room;
 
-        StructureTemplateAccessor.getLAZY_LOADING_EXECUTOR().execute(() -> {
+        VaultMapper.LOGGER.debug("processing {}", name);
+//        StructureTemplateAccessor.getLAZY_LOADING_EXECUTOR().execute(() -> {
             this.columnList.clear();
             Map<Integer, Block> northeastColumn = new HashMap<>();
             Map<Integer, Block> northwestColumn = new HashMap<>();
@@ -95,11 +96,13 @@ public class RoomData {
                 ((StructureTemplateAccessor) structure).getTiles().clear();
                 ((StructureTemplateAccessor) structure).getEntities().clear();
                 structure.setUninitialized();
+                VaultMapper.LOGGER.debug("uninitializing {}", name);
             }
-        });
+//        });
     }
 
     public static void initRooms() {
+        VaultMapper.LOGGER.debug("Room init");
         omegaRooms = new ArrayList<>();
         challengeRooms = new ArrayList<>();
         resourceRooms = new ArrayList<>();
@@ -109,31 +112,31 @@ public class RoomData {
         TemplatePoolKey bossRef = VaultRegistry.TEMPLATE_POOL.getKey("the_vault:vault/rooms/special/boss");
 
         if (challengeRef == null) {
-            VaultMapper.LOGGER.info("challengeRef is null");
+            VaultMapper.LOGGER.error("challengeRef is null");
             return;
         }
         if (omegaRef == null) {
-            VaultMapper.LOGGER.info("omegaRef is null");
+            VaultMapper.LOGGER.error("omegaRef is null");
             return;
         }
         if (resourceRef == null) {
-            VaultMapper.LOGGER.info("resourceRef is null");
+            VaultMapper.LOGGER.error("resourceRef is null");
             return;
         }
         if (!challengeRef.supports(Version.latest())) {
-            VaultMapper.LOGGER.info("challengeRef doesnt support version");
+            VaultMapper.LOGGER.error("challengeRef doesnt support version");
             return;
         }
         if (!omegaRef.supports(Version.latest())) {
-            VaultMapper.LOGGER.info("omegaRef doesnt support version");
+            VaultMapper.LOGGER.error("omegaRef doesnt support version");
             return;
         }
         if (!resourceRef.supports(Version.latest())) {
-            VaultMapper.LOGGER.info("resourceRef doesnt support version");
+            VaultMapper.LOGGER.error("resourceRef doesnt support version");
             return;
         }
         if (!bossRef.supports(Version.latest())) {
-            VaultMapper.LOGGER.info("bossRef doesnt support version");
+            VaultMapper.LOGGER.error("bossRef doesnt support version");
             return;
         }
         TemplatePool challenge = challengeRef.get(Version.latest());
@@ -143,7 +146,7 @@ public class RoomData {
 
         if (!challengeRef.supports(Version.latest()))
             if (challenge == null) {
-                VaultMapper.LOGGER.info("Cant find challenge rooms");
+                VaultMapper.LOGGER.error("Cant find challenge rooms");
                 return;
             }
         challenge.iterate((entry -> {
@@ -229,6 +232,7 @@ public class RoomData {
                 return true;
             }));
         }
+        VaultMapper.LOGGER.debug("Room init done");
     }
 
     public static void iterateRooms(List<RoomData> listToAdd, String type, String name, IndirectTemplateEntry roomBatchRef) {
