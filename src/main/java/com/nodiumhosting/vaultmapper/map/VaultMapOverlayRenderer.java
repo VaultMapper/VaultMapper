@@ -323,13 +323,6 @@ public class VaultMapOverlayRenderer {
             var minZ = Math.min(startZ, endZ);
             var maxZ = Math.max(startZ, endZ);
 
-            if ((cell.marked || cell.inscripted) && ClientConfig.SHOW_ROOM_ICONS.get()) {
-                minX -= (float) (mapRoomWidth * 0.5);
-                maxX += (float) (mapRoomWidth * 0.5);
-                minZ -= (float) (mapRoomWidth * 0.5);
-                maxZ += (float) (mapRoomWidth * 0.5);
-            }
-
             bufferBuilder.vertex(minX, maxZ, 0).color(color).endVertex();
             bufferBuilder.vertex(maxX, maxZ, 0).color(color).endVertex();
             bufferBuilder.vertex(maxX, minZ, 0).color(color).endVertex();
@@ -350,12 +343,16 @@ public class VaultMapOverlayRenderer {
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
 
-        float startX = mapX - mapRoomWidth;
-        float startZ = mapZ - mapRoomWidth;
-        float endX = mapX + mapRoomWidth;
-        float endZ  = mapZ + mapRoomWidth;
+        int crop = ClientConfig.ICON_CROP.get();
+        float scale = (16.0f - 2 * crop) / 16.0f;
+        float halfSize = mapRoomWidth * scale;
 
-        renderBorder(bufferBuilder,color, startX, startZ, endX, endZ, 1/8f*mapRoomWidth);
+        float minX = mapX - halfSize;
+        float maxX = mapX + halfSize;
+        float minZ = mapZ - halfSize;
+        float maxZ = mapZ + halfSize;
+
+        renderBorder(bufferBuilder,color, minX, minZ, maxX, maxZ, 1/8f*mapRoomWidth);
     }
 
 
@@ -366,27 +363,23 @@ public class VaultMapOverlayRenderer {
             var cellCenter = getCellCenter(cell);
             float mapX = cellCenter.x;
             float mapZ = cellCenter.y;
-            //float roomWidth = (float) (mapRoomWidth * 1.5);
-            float roomWidth = mapRoomWidth;
-            float startX;
-            float startZ;
-            float endX;
-            float endZ;
 
-            startX = mapX - roomWidth;
-            startZ = mapZ - roomWidth;
-            endX = mapX + roomWidth;
-            endZ = mapZ + roomWidth;
+            int crop = ClientConfig.ICON_CROP.get();
+            float scale = (16.0f - 2 * crop) / 16.0f;
+            float halfSize = mapRoomWidth * scale;
 
-            var minX = Math.min(startX, endX);
-            var maxX = Math.max(startX, endX);
-            var minZ = Math.min(startZ, endZ);
-            var maxZ = Math.max(startZ, endZ);
+            float minX = mapX - halfSize;
+            float maxX = mapX + halfSize;
+            float minZ = mapZ - halfSize;
+            float maxZ = mapZ + halfSize;
 
-            bufferBuilder.vertex(minX, maxZ, 0).uv(0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(maxX, maxZ, 0).uv(1.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(maxX, minZ, 0).uv(1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(minX, minZ, 0).uv(0.0F, 0.0F).endVertex();
+            float zeroOff = crop / 16f;
+            float oneOff = 1.0F - crop / 16f;
+
+            bufferBuilder.vertex(minX, maxZ, 0).uv(zeroOff, oneOff).endVertex();
+            bufferBuilder.vertex(maxX, maxZ, 0).uv(oneOff, oneOff).endVertex();
+            bufferBuilder.vertex(maxX, minZ, 0).uv(oneOff, zeroOff).endVertex();
+            bufferBuilder.vertex(minX, minZ, 0).uv(zeroOff, zeroOff).endVertex();
         }
     }
 
