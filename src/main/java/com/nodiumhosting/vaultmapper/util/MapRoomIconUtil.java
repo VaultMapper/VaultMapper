@@ -22,12 +22,12 @@ public class MapRoomIconUtil {
         ROOM_DIAMOND_CAVES("the_vault:textures/gui/map/diamond_caves.png"),
         ROOM_CHROMATIC_CAVES("the_vault:textures/gui/map/chromatic_caves.png"),
 
-        ROOM_MODDED_CAVES("vaultmapper:textures/gui/icons/modded_caves.png"),
-        ROOM_WILD_WEST("vaultmapper:textures/gui/icons/wild_west.png"),
-        ROOM_CUBE("vaultmapper:textures/gui/icons/cube.png"),
-        ROOM_END("vaultmapper:textures/gui/icons/end.png"),
-        ROOM_NETHER("vaultmapper:textures/gui/icons/nether.png"),
-        ROOM_QUARRY("vaultmapper:textures/gui/icons/quarry.png");
+        ROOM_MODDED_CAVES("the_vault:textures/gui/map/vm_modded_caves.png"),
+        ROOM_WILD_WEST("the_vault:textures/gui/map/vm_wild_west.png"),
+        ROOM_CUBE("the_vault:textures/gui/map/vm_cube.png"),
+        ROOM_END("the_vault:textures/gui/map/vm_end.png"),
+        ROOM_NETHER("the_vault:textures/gui/map/vm_nether.png"),
+        ROOM_QUARRY("the_vault:textures/gui/map/vm_quarry.png");
 
         private final ResourceLocation resourceLocation;
         BaseIcons(String path) {
