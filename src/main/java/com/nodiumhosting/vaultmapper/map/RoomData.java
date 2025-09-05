@@ -1,6 +1,7 @@
 package com.nodiumhosting.vaultmapper.map;
 
 import com.nodiumhosting.vaultmapper.VaultMapper;
+import com.nodiumhosting.vaultmapper.mixin.StructureTemplateAccessor;
 import com.nodiumhosting.vaultmapper.proto.RoomType;
 import iskallia.vault.block.CoinPileBlock;
 import iskallia.vault.block.VaultChestBlock;
@@ -9,14 +10,13 @@ import iskallia.vault.core.Version;
 import iskallia.vault.core.data.key.TemplatePoolKey;
 import iskallia.vault.core.vault.VaultRegistry;
 import iskallia.vault.core.world.data.tile.PartialTile;
+import iskallia.vault.core.world.template.StructureTemplate;
 import iskallia.vault.core.world.template.Template;
 import iskallia.vault.core.world.template.data.DirectTemplateEntry;
 import iskallia.vault.core.world.template.data.IndirectTemplateEntry;
 import iskallia.vault.core.world.template.data.TemplatePool;
 import iskallia.vault.init.ModBlocks;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -47,53 +47,56 @@ public class RoomData {
         this.type = type;
         this.name = name;
         this.room = room;
-        Iterator<PartialTile> tiles = room.getTiles(Template.ALL_TILES);
-        Map<Integer, Block> northeastColumn = new HashMap<>();
-        Map<Integer, Block> northwestColumn = new HashMap<>();
-        Map<Integer, Block> southeastColumn = new HashMap<>();
-        Map<Integer, Block> southwestColumn = new HashMap<>();
-        columnList.add(northeastColumn);
-        columnList.add(northwestColumn);
-        columnList.add(southeastColumn);
-        columnList.add(southwestColumn);
 
+        StructureTemplateAccessor.getLAZY_LOADING_EXECUTOR().execute(() -> {
+            this.columnList.clear();
+            Map<Integer, Block> northeastColumn = new HashMap<>();
+            Map<Integer, Block> northwestColumn = new HashMap<>();
+            Map<Integer, Block> southeastColumn = new HashMap<>();
+            Map<Integer, Block> southwestColumn = new HashMap<>();
+            this.columnList.add(northeastColumn);
+            this.columnList.add(northwestColumn);
+            this.columnList.add(southeastColumn);
+            this.columnList.add(southwestColumn);
 
-        while (tiles.hasNext()) {
-            PartialTile tile = tiles.next();
-            BlockPos pos = tile.getPos();
-            Optional<Block> optBlock = tile.getState().getBlock().asWhole();
-            if (optBlock.isEmpty()) {
-                continue;
+            Iterator<PartialTile> tiles = room.getTiles(Template.ALL_TILES);
+            while(tiles.hasNext()) {
+                PartialTile tile = tiles.next();
+                BlockPos pos = tile.getPos();
+                Optional<Block> optBlock = tile.getState().getBlock().asWhole();
+                if (optBlock.isEmpty()) {
+                    continue;
+                }
+
+                Block block = optBlock.get();
+                int x = pos.getX();
+                int z = pos.getZ();
+                int y = pos.getY();
+                if (x == 0 && z == 0) {
+                    northwestColumn.put(y, block);
+                } else if (x == 46 && z == 0) {
+                    northeastColumn.put(y, block);
+                } else if (x == 0 && z == 46) {
+                    southwestColumn.put(y, block);
+                } else if (x == 46 && z == 46) {
+                    southeastColumn.put(y, block);
+                }
+
+                if (x == 23 && y == 32 && z == 23) {
+                    this.mineOption1 = block;
+                } else if (x == 23 && y == 31 && z == 23) {
+                    this.mineOption2 = block;
+                } else if (x == 23 && y == 29 && z == 23) {
+                    this.raidOption = block;
+                }
             }
-            Block block = optBlock.get();
-            int x = pos.getX();
-            int z = pos.getZ();
-            int y = pos.getY();
-            if (x == 0 && z == 0) {
-                northwestColumn.put(y, block);
+
+            if (room instanceof StructureTemplate structure) {
+                ((StructureTemplateAccessor) structure).getTiles().clear();
+                ((StructureTemplateAccessor) structure).getEntities().clear();
+                structure.setUninitialized();
             }
-            if (x == 46 && z == 0) {
-                northeastColumn.put(y, block);
-            }
-            if (x == 0 && z == 46) {
-                southwestColumn.put(y, block);
-            }
-            if (x == 46 && z == 46) {
-                southeastColumn.put(y, block);
-            }
-            if (x == 23 && y == 32 && z == 23) {
-                mineOption1 = block;
-            }
-            if (x == 23 && y == 31 && z == 23) {
-                mineOption2 = block;
-            }
-            if (x == 23 && y == 29 && z == 23) {
-                raidOption = block;
-            }
-            //if (x==23 && z == 23) {
-            //centerColumn.put(pos.getY(),block);
-            //}
-        }
+        });
     }
 
     public static void initRooms() {
@@ -395,21 +398,21 @@ public class RoomData {
     public Tuple<RoomType, String> findRoom() {
         for (RoomData omegaRoom : omegaRooms) {
             if (this.compareRoom(omegaRoom)) {
-                return new Tuple<RoomType, String>(RoomType.ROOMTYPE_OMEGA, omegaRoom.name);
+                return new Tuple<>(RoomType.ROOMTYPE_OMEGA, omegaRoom.name);
             }
         }
         for (RoomData challengeRoom : challengeRooms) {
             if (this.compareRoom(challengeRoom)) {
-                return new Tuple<RoomType, String>(RoomType.ROOMTYPE_CHALLENGE, challengeRoom.name);
+                return new Tuple<>(RoomType.ROOMTYPE_CHALLENGE, challengeRoom.name);
             }
         }
         for (RoomData resourceRoom : resourceRooms) {
             if (this.compareRoom(resourceRoom)) {
-                return new Tuple<RoomType, String>(RoomType.ROOMTYPE_RESOURCE, resourceRoom.name);
+                return new Tuple<>(RoomType.ROOMTYPE_RESOURCE, resourceRoom.name);
             }
         }
         // TODO: need to add support for vendor rooms
 
-        return new Tuple<RoomType, String>(RoomType.ROOMTYPE_BASIC, "");
+        return new Tuple<>(RoomType.ROOMTYPE_BASIC, "");
     }
 }

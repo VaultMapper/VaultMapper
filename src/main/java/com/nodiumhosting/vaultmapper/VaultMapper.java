@@ -70,13 +70,6 @@ public class VaultMapper {
         KeybindEvents.registerKeyBinds();
 
         VaultMapOverlayRenderer.prep();
-
-//        VaultMapOverlayRenderer.ignoreResearchRequirement = ClientConfig.IGNORE_RESEARCH_REQUIREMENT.get();
-        VaultMapOverlayRenderer.ignoreResearchRequirement = true; // removed the research requirement for now because people were confused why their map wasn't working
-
-        if (RoomData.omegaRooms == null || RoomData.challengeRooms == null || RoomData.resourceRooms == null) {
-            RoomData.initRooms();
-        }
     }
 
     @Mod.EventBusSubscriber(modid = VaultMapper.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)

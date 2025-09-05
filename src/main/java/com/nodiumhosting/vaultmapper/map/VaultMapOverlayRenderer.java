@@ -36,7 +36,6 @@ import static java.lang.Math.abs;
 @Mod.EventBusSubscriber({Dist.CLIENT})
 public class VaultMapOverlayRenderer {
     public static boolean enabled = false;
-    public static boolean ignoreResearchRequirement = false;
     public static boolean syncErrorState = false;
     static boolean playerCentricRender = ClientConfig.PLAYER_CENTRIC_RENDERING.get();
     static int cutoff = ClientConfig.PC_CUTOFF.get();
