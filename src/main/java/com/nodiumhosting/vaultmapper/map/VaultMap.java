@@ -387,10 +387,6 @@ public class VaultMap {
             ClientConfig.MAP_ENABLED.set(false);
             player.sendMessage(new TextComponent("Vault Map rendering disabled"), player.getUUID());
         } else {
-//            if (!ResearchUtil.hasResearch("Vault Compass") && !VaultMapOverlayRenderer.ignoreResearchRequirement) {
-//                player.sendMessage(new TextComponent("Cannot enable. The Research \"Vault Compass\" is not unlocked."), player.getUUID());
-//                return;
-//            }
             ClientConfig.MAP_ENABLED.set(true);
             player.sendMessage(new TextComponent("Vault Map rendering enabled"), player.getUUID());
         }
