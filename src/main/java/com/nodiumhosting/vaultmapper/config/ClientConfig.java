@@ -36,6 +36,8 @@ public class ClientConfig {
     public static final ForgeConfigSpec.ConfigValue<Boolean> PC_BORDER;
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAYER_CENTRIC_RENDERING;
 
+    public static final ForgeConfigSpec.ConfigValue<Integer> ICON_CROP;
+
     static {
         BUILDER.push("VaultMapper Client Config");
 
@@ -82,6 +84,8 @@ public class ClientConfig {
         PC_CUTOFF = BUILDER.comment("Number of cells rendered around player").define("PC_CUTOFF", 20);
         PC_BORDER = BUILDER.comment("Render border around the player centric rendering range").define("PC_BORDER", true);
         PLAYER_CENTRIC_RENDERING = BUILDER.comment("Enable player centric rendering. Also greatly reduces lag(hopefully)").define("PLAYER_CENTRIC_RENDERING", false);
+
+        ICON_CROP = BUILDER.comment("Number of pixels cropped from icon from each side").defineInRange("ICON_CROP", 0, 0, 8);
 
         BUILDER.pop();
         SPEC = BUILDER.build();

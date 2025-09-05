@@ -6,11 +6,11 @@ import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.map.VaultCell;
 import com.nodiumhosting.vaultmapper.map.VaultMap;
+import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
 import com.nodiumhosting.vaultmapper.map.snapshots.MapSnapshot;
 import com.nodiumhosting.vaultmapper.proto.CellType;
 import com.nodiumhosting.vaultmapper.proto.RoomType;
 import com.nodiumhosting.vaultmapper.util.MapRoomIconUtil;
-import com.nodiumhosting.vaultmapper.util.Util;
 import iskallia.vault.client.gui.framework.element.ElasticContainerElement;
 import iskallia.vault.client.gui.framework.element.LabelElement;
 import iskallia.vault.client.gui.framework.element.VerticalScrollClipContainer;
@@ -62,26 +62,23 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
             if (cell.inscripted && !cell.explored && !ClientConfig.SHOW_INSCRIPTIONS.get()) return;
             float mapX = centerX + cell.x * (width / 2);
             float mapZ = centerZ + cell.z * (width / 2);
-            float coordOffset = width / 2;
-            float startX;
-            float startZ;
-            float endX;
-            float endZ;
 
-            startX = mapX - coordOffset;
-            startZ = mapZ - coordOffset;
-            endX = mapX + coordOffset;
-            endZ = mapZ + coordOffset;
+            int crop = ClientConfig.ICON_CROP.get();
+            float scale = (16.0f - 2 * crop) / 16.0f;
+            float halfSize = width * scale / 2;
 
-            var minX = Math.min(startX, endX);
-            var maxX = Math.max(startX, endX);
-            var minZ = Math.min(startZ, endZ);
-            var maxZ = Math.max(startZ, endZ);
+            float minX = mapX - halfSize;
+            float maxX = mapX + halfSize;
+            float minZ = mapZ - halfSize;
+            float maxZ = mapZ + halfSize;
 
-            bufferBuilder.vertex(minX, maxZ, 0).uv(0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(maxX, maxZ, 0).uv(1.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(maxX, minZ, 0).uv(1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(minX, minZ, 0).uv(0.0F, 0.0F).endVertex();
+            float zeroOff = crop / 16f;
+            float oneOff = 1.0F - crop / 16f;
+
+            bufferBuilder.vertex(minX, maxZ, 0).uv(zeroOff, oneOff).endVertex();
+            bufferBuilder.vertex(maxX, maxZ, 0).uv(oneOff, oneOff).endVertex();
+            bufferBuilder.vertex(maxX, minZ, 0).uv(oneOff, zeroOff).endVertex();
+            bufferBuilder.vertex(minX, minZ, 0).uv(zeroOff, zeroOff).endVertex();
         }
     }
 
@@ -119,12 +116,6 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
             var minZ = Math.min(startZ, endZ);
             var maxZ = Math.max(startZ, endZ);
 
-            if ((cell.marked || cell.inscripted) && ClientConfig.SHOW_ROOM_ICONS.get()) {
-                minX -= (float) (width * 0.5);
-                maxX += (float) (width * 0.5);
-                minZ -= (float) (width * 0.5);
-                maxZ += (float) (width * 0.5);
-            }
 
             bufferBuilder.vertex(minX, maxZ, 0).color(color).endVertex();
             bufferBuilder.vertex(maxX, maxZ, 0).color(color).endVertex();
@@ -272,6 +263,38 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
                 bufferBuilder.end();
                 BufferUploader.end(bufferBuilder);
             });
+
+            RenderSystem.enableBlend();
+            RenderSystem.disableTexture();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            cells.stream().filter((cell) -> cell.cellType == CellType.CELLTYPE_ROOM && (cell.inscripted || cell.marked)).forEach((cell) -> {
+
+                if (cell.inscripted && !cell.explored && !ClientConfig.SHOW_INSCRIPTIONS.get())
+                    return;
+
+                float mapX = (float) (w / 2 + window.mapCenterX) + cell.x * mapRoomWidth;
+                float mapZ = (float) (125 + window.mapCenterZ) + cell.z * mapRoomWidth;
+
+                int crop = ClientConfig.ICON_CROP.get();
+
+                float scale = (16.0f - 2 * crop) / 16.0f;
+
+                float halfSize = mapRoomWidth * scale;
+
+                float minX = mapX - halfSize;
+                float maxX = mapX + halfSize;
+                float minZ = mapZ - halfSize;
+                float maxZ = mapZ + halfSize;
+
+                VaultMapOverlayRenderer.renderBorder(bufferBuilder, parseColor(VaultMap.getCellColor(cell)), minX, minZ, maxX, maxZ, 1/8f*mapRoomWidth);
+
+            });
+
+            bufferBuilder.end();
+            BufferUploader.end(bufferBuilder);
         }
 
     }
