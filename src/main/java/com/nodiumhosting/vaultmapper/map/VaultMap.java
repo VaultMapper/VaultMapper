@@ -279,7 +279,7 @@ public class VaultMap {
                                 roomName = "";
                             }
                         }
-                        if (roomName.equals("chromatic_caves")) {
+                        if (roomName.contains("chromatic_cave")) {
                             RoomBlockData rbd = RoomBlockData.getRoomBlockData(playerRoomX, playerRoomZ);
                             if (rbd.chromaticIron < 50) {
                                 roomType = RoomType.ROOMTYPE_RESOURCE;
