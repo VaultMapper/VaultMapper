@@ -1,5 +1,6 @@
 package com.nodiumhosting.vaultmapper.map;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -14,6 +15,7 @@ import com.nodiumhosting.vaultmapper.util.MapRoomIconUtil;
 import iskallia.vault.core.vault.ClientVaults;
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.objective.HeraldObjective;
+import iskallia.vault.util.McClientHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
@@ -22,7 +24,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.common.UsernameCache;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -185,7 +186,7 @@ public class VaultMapOverlayRenderer {
         }
     }
 
-    private static void renderPlayerName(PoseStack posestack, String name, VaultMap.MapPlayer data) {
+    private static void renderPlayerName(PoseStack posestack, String uuid, VaultMap.MapPlayer data) {
         int offsetX = ClientConfig.MAP_X_OFFSET.get();
         int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
         float arrowX;
@@ -199,17 +200,16 @@ public class VaultMapOverlayRenderer {
             arrowZ = centerZ + data.y * mapRoomWidth + offsetZ;
         }
 
-        try {
-            var id = UUID.fromString(name);
-            String username = UsernameCache.getLastKnownUsername(id);
-            if (username == null || username.isEmpty()) {
-                return;
-            }
-            name = username;
-
-        } catch (IllegalArgumentException e) {
+        UUID id = UUID.fromString(uuid);
+        GameProfile profile = McClientHelper.getOnlineProfile(id).orElse(null);
+        if (profile == null) {
             return;
         }
+        String name = profile.getName();
+        if (name == null || name.isEmpty()){
+            return;
+        }
+
         posestack.pushPose();
         float scale = ClientConfig.MAP_SCALE.get() * 0.1f * (float)(1/Minecraft.getInstance().getWindow().getGuiScale());
         posestack.translate((1 - scale) * arrowX, (1 - scale) * arrowZ, 0);
