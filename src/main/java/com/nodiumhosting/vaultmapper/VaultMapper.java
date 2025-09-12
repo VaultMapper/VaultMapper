@@ -5,7 +5,6 @@ import com.nodiumhosting.vaultmapper.commands.VaultMapperCommand;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.events.KeybindEvents;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
-import com.nodiumhosting.vaultmapper.map.RoomData;
 import com.nodiumhosting.vaultmapper.util.UpdateChecker;
 import com.nodiumhosting.vaultmapper.util.Util;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
@@ -19,7 +18,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
-import java.net.InetSocketAddress;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

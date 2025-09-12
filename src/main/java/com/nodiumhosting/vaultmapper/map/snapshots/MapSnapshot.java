@@ -1,7 +1,5 @@
 package com.nodiumhosting.vaultmapper.map.snapshots;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.nodiumhosting.vaultmapper.VaultMapper;
@@ -9,7 +7,7 @@ import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.gui.screen.VaultMapScreen;
 import com.nodiumhosting.vaultmapper.map.VaultCell;
 import com.nodiumhosting.vaultmapper.map.VaultMap;
-import com.nodiumhosting.vaultmapper.util.BooleanSerializer;
+import com.nodiumhosting.vaultmapper.util.Util;
 import net.minecraft.client.Minecraft;
 
 import java.io.*;
@@ -38,8 +36,8 @@ public class MapSnapshot {
 
     public static void toggleFavorite(UUID uuid) {
         makeSureFoldersExist();
-        String mapPath = mapSaveFolder + uuid.toString() + ".vaultmap";
-        String favPath = favoriteMapsFolder + uuid.toString() + ".vaultmap";
+        String mapPath = mapSaveFolder + uuid + ".vaultmap";
+        String favPath = favoriteMapsFolder + uuid + ".vaultmap";
         File favorite = new File(favPath);
         if (favorite.exists()) {
             favorite.delete();
@@ -65,12 +63,6 @@ public class MapSnapshot {
 
     public static void addMap(UUID uuid, MapSnapshot snapshot) {
         makeSureFoldersExist();
-//        Gson gson = new Gson();
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        BooleanSerializer serializer = new BooleanSerializer();
-        gsonBuilder.registerTypeAdapter(Boolean.class, serializer);
-        gsonBuilder.registerTypeAdapter(boolean.class, serializer);
-        Gson gson = gsonBuilder.create();
         try {
 //            FileWriter writer = new FileWriter(mapSaveFolder + uuid.toString() + ".vaultmap");
 //            gson.toJson(snapshot, writer);
@@ -79,7 +71,7 @@ public class MapSnapshot {
             FileOutputStream fos = new FileOutputStream(mapSaveFolder + uuid.toString() + ".vaultmap");
             GZIPOutputStream gzos = new GZIPOutputStream(fos);
             OutputStreamWriter writer = new OutputStreamWriter(gzos);
-            gson.toJson(snapshot, writer);
+            Util.MAP_GSON.toJson(snapshot, writer);
             writer.close();
         } catch (IOException e) {
             VaultMapper.LOGGER.error("Couldn't create map save file");
@@ -140,12 +132,7 @@ public class MapSnapshot {
         if (!mapFile.exists()) {
             return Optional.empty();
         }
-//        Gson gson = new Gson();
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        BooleanSerializer serializer = new BooleanSerializer();
-        gsonBuilder.registerTypeAdapter(Boolean.class, serializer);
-        gsonBuilder.registerTypeAdapter(boolean.class, serializer);
-        Gson gson = gsonBuilder.create();
+
         try {
 //            FileReader reader = new FileReader(path);
 //            Type saveType = new TypeToken<MapSnapshot>() {}.getType();
@@ -155,7 +142,7 @@ public class MapSnapshot {
             GZIPInputStream gzis = new GZIPInputStream(fis);
             InputStreamReader reader = new InputStreamReader(gzis);
             Type saveType = new TypeToken<MapSnapshot>() {}.getType();
-            return Optional.of(gson.fromJson(reader, saveType));
+            return Optional.of(Util.MAP_GSON.fromJson(reader, saveType));
         } catch (IOException e) {
             VaultMapper.LOGGER.error("Couldn't read map save file");
         }
