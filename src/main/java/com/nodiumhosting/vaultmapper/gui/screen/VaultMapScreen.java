@@ -40,7 +40,7 @@ public class VaultMapScreen extends AbstractElementScreen {
     public VaultMapScreen(Optional<MapSnapshot> snapshot) {
         super(new TextComponent("Map"), ScreenRenderers.getBuffered(), ScreenTooltipRenderer::create);
         this.setGuiSize(Spatials.size(350, 186));
-        openMapContainerElement = (MapContainerElement)this.addElement((MapContainerElement)(new MapContainerElement(Spatials.positionX(4).width(-7).height(-16), snapshot )).layout((screen, gui, parent, world) -> {
+        openMapContainerElement = this.addElement((new MapContainerElement(Spatials.positionX(4).width(-7).height(-16), snapshot )).layout((screen, gui, parent, world) -> {
             world.translateX(gui.left() + 2 - 26 + 7).translateY(this.getTabContentSpatial().bottom()).width(world.width() + gui.right() - world.x() + 7).height(world.height() + gui.height() - 22);
         }));
         openMapLabel = (LabelElement)this.addElement((LabelElement)(new LabelElement(Spatials.zero(), (new TextComponent("Map Preview")).withStyle(ChatFormatting.BLACK), LabelTextStyle.left())).layout((screen, gui, parent, world) -> {
