@@ -73,7 +73,7 @@ public class MapRoomIconUtil {
             else if (path.contains("modded_cave")) {
                 icon = BaseIcons.ROOM_MODDED_CAVES.getResourceLocation();
             }
-            else if (path.contains("wild_west")) {
+            else if (path.contains("wildwest")) {
                 icon = BaseIcons.ROOM_WILD_WEST.getResourceLocation();
             }
             else if (path.contains("cube")) {
