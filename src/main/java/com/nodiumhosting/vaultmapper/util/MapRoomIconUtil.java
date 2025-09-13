@@ -50,7 +50,6 @@ public class MapRoomIconUtil {
             if (customIcon.isPresent()) {
                 String iconNamespace = customIcon.get().getNamespace();
                 String iconPath = customIcon.get().getPath();
-
                 icon = new ResourceLocation(iconNamespace, "textures/" + iconPath + ".png");
             }
             else if (path.contains("boss")) {
@@ -74,7 +73,7 @@ public class MapRoomIconUtil {
             else if (path.contains("modded_cave")) {
                 icon = BaseIcons.ROOM_MODDED_CAVES.getResourceLocation();
             }
-            else if (path.contains("wild_west")) {
+            else if (path.contains("wildwest")) {
                 icon = BaseIcons.ROOM_WILD_WEST.getResourceLocation();
             }
             else if (path.contains("cube")) {
@@ -98,7 +97,7 @@ public class MapRoomIconUtil {
             else if (path.contains("raw")) {
                 icon = BaseIcons.ROOM_RAW.getResourceLocation();
             }
-            else if (path.contains("ore")) {
+            else if (path.contains("/ore")) {
                 icon = BaseIcons.ROOM_ORE.getResourceLocation();
             }
             else {

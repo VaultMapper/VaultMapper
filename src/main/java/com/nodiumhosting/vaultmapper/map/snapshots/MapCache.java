@@ -1,12 +1,10 @@
 package com.nodiumhosting.vaultmapper.map.snapshots;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.map.VaultCell;
 import com.nodiumhosting.vaultmapper.map.VaultMap;
-import com.nodiumhosting.vaultmapper.util.BooleanSerializer;
+import com.nodiumhosting.vaultmapper.util.Util;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -25,14 +23,9 @@ public class MapCache {
 
     public static void updateCache() {
         MapSnapshot.makeSureFoldersExist();
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        BooleanSerializer serializer = new BooleanSerializer();
-        gsonBuilder.registerTypeAdapter(Boolean.class, serializer);
-        gsonBuilder.registerTypeAdapter(boolean.class, serializer);
-        Gson gson = gsonBuilder.create();
         try {
             FileWriter writer = new FileWriter(cachePath);
-            gson.toJson(VaultMap.getCells(), writer);
+            Util.MAP_GSON.toJson(VaultMap.cells, writer);
             writer.close();
         } catch (IOException e) {
             VaultMapper.LOGGER.error("Couldn't create map cache file");
@@ -46,18 +39,12 @@ public class MapCache {
             return;
         }
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        BooleanSerializer serializer = new BooleanSerializer();
-        gsonBuilder.registerTypeAdapter(Boolean.class, serializer);
-        gsonBuilder.registerTypeAdapter(boolean.class, serializer);
-        Gson gson = gsonBuilder.create();
         try {
             FileReader reader = new FileReader(cachePath);
-            Type saveType = new TypeToken<CopyOnWriteArrayList<VaultCell>>() {
-            }.getType();
-            VaultMap.cells = (gson.fromJson(reader, saveType));
-        } catch (FileNotFoundException e) {
-        }
+            Type saveType = new TypeToken<CopyOnWriteArrayList<VaultCell>>(){}.getType();
+            VaultMap.cells = Util.MAP_GSON.fromJson(reader, saveType);
+            VaultMap.refreshCache();
+        } catch (FileNotFoundException e) {}
     }
 
 }

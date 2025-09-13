@@ -57,71 +57,69 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
         });
     }
 
+    private static boolean shouldRenderCell(VaultCell cell) {
+        return !cell.inscripted || cell.explored || ClientConfig.SHOW_INSCRIPTIONS.get();
+    }
+
     private static void renderTextureCell(BufferBuilder bufferBuilder, VaultCell cell, float centerX, float centerZ, float width) {
-        if (cell.cellType == CellType.CELLTYPE_ROOM) {
-            if (cell.inscripted && !cell.explored && !ClientConfig.SHOW_INSCRIPTIONS.get()) return;
-            float mapX = centerX + cell.x * (width / 2);
-            float mapZ = centerZ + cell.z * (width / 2);
+        float mapX = centerX + cell.x * (width / 2);
+        float mapZ = centerZ + cell.z * (width / 2);
 
-            int crop = ClientConfig.ICON_CROP.get();
-            float scale = (16.0f - 2 * crop) / 16.0f;
-            float halfSize = width * scale / 2;
+        int crop = ClientConfig.ICON_CROP.get();
+        float scale = (16.0f - 2 * crop) / 16.0f;
+        float halfSize = width * scale / 2;
 
-            float minX = mapX - halfSize;
-            float maxX = mapX + halfSize;
-            float minZ = mapZ - halfSize;
-            float maxZ = mapZ + halfSize;
+        float minX = mapX - halfSize;
+        float maxX = mapX + halfSize;
+        float minZ = mapZ - halfSize;
+        float maxZ = mapZ + halfSize;
 
-            float zeroOff = crop / 16f;
-            float oneOff = 1.0F - crop / 16f;
+        float zeroOff = crop / 16f;
+        float oneOff = 1.0F - crop / 16f;
 
-            bufferBuilder.vertex(minX, maxZ, 0).uv(zeroOff, oneOff).endVertex();
-            bufferBuilder.vertex(maxX, maxZ, 0).uv(oneOff, oneOff).endVertex();
-            bufferBuilder.vertex(maxX, minZ, 0).uv(oneOff, zeroOff).endVertex();
-            bufferBuilder.vertex(minX, minZ, 0).uv(zeroOff, zeroOff).endVertex();
-        }
+        bufferBuilder.vertex(minX, maxZ, 0).uv(zeroOff, oneOff).endVertex();
+        bufferBuilder.vertex(maxX, maxZ, 0).uv(oneOff, oneOff).endVertex();
+        bufferBuilder.vertex(maxX, minZ, 0).uv(oneOff, zeroOff).endVertex();
+        bufferBuilder.vertex(minX, minZ, 0).uv(zeroOff, zeroOff).endVertex();
     }
 
 
     private static void renderCell(BufferBuilder bufferBuilder, VaultCell cell, int color, float centerX, float centerZ, float width) {
-        if (cell.cellType != CellType.CELLTYPE_UNKNOWN) {
-            if (cell.inscripted && !cell.explored && !ClientConfig.SHOW_INSCRIPTIONS.get()) return;
-            float mapX = centerX + cell.x * width;
-            float mapZ = centerZ + cell.z * width;
-            float coordOffset = width / 2;
-            float startX;
-            float startZ;
-            float endX;
-            float endZ;
-            if (cell.cellType == CellType.CELLTYPE_TUNNEL_X || cell.cellType == CellType.CELLTYPE_TUNNEL_Z) {
-                if (cell.cellType == CellType.CELLTYPE_TUNNEL_X) { // X facing
-                    startX = mapX - coordOffset;
-                    startZ = mapZ - coordOffset / 2;
-                    endX = mapX + coordOffset;
-                    endZ = mapZ + coordOffset / 2;
-                } else { // Z facing
-                    startX = mapX - coordOffset / 2;
-                    startZ = mapZ - coordOffset;
-                    endX = mapX + coordOffset / 2;
-                    endZ = mapZ + coordOffset;
-                }
-            } else { // square
+        float mapX = centerX + cell.x * width;
+        float mapZ = centerZ + cell.z * width;
+        float coordOffset = width / 2;
+        float startX;
+        float startZ;
+        float endX;
+        float endZ;
+        if (cell.cellType == CellType.CELLTYPE_TUNNEL_X || cell.cellType == CellType.CELLTYPE_TUNNEL_Z) {
+            if (cell.cellType == CellType.CELLTYPE_TUNNEL_X) { // X facing
                 startX = mapX - coordOffset;
-                startZ = mapZ - coordOffset;
+                startZ = mapZ - coordOffset / 2;
                 endX = mapX + coordOffset;
+                endZ = mapZ + coordOffset / 2;
+            } else { // Z facing
+                startX = mapX - coordOffset / 2;
+                startZ = mapZ - coordOffset;
+                endX = mapX + coordOffset / 2;
                 endZ = mapZ + coordOffset;
             }
-            var minX = Math.min(startX, endX);
-            var maxX = Math.max(startX, endX);
-            var minZ = Math.min(startZ, endZ);
-            var maxZ = Math.max(startZ, endZ);
-
-
-            bufferBuilder.vertex(minX, maxZ, 0).color(color).endVertex();
-            bufferBuilder.vertex(maxX, maxZ, 0).color(color).endVertex();
-            bufferBuilder.vertex(maxX, minZ, 0).color(color).endVertex();
-            bufferBuilder.vertex(minX, minZ, 0).color(color).endVertex();
+        } else { // square
+            startX = mapX - coordOffset;
+            startZ = mapZ - coordOffset;
+            endX = mapX + coordOffset;
+            endZ = mapZ + coordOffset;
         }
+        var minX = Math.min(startX, endX);
+        var maxX = Math.max(startX, endX);
+        var minZ = Math.min(startZ, endZ);
+        var maxZ = Math.max(startZ, endZ);
+
+
+        bufferBuilder.vertex(minX, maxZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(maxX, maxZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(maxX, minZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(minX, minZ, 0).color(color).endVertex();
     }
 
     @Override
@@ -183,7 +181,7 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
             IMutableSpatial spatial = Spatials.positionXYZ(position);
             spatial.positionZ(10); // TRY JUST ONE
             if (optMap.isEmpty()) {
-                this.addElement(new LabelElement(spatial.positionX(0).positionY(5), new TextComponent("No map save available for this vault"), new LabelTextStyle.Builder()));
+                this.addElement(new LabelElement<>(spatial.positionX(0).positionY(5), new TextComponent("No map save available for this vault"), new LabelTextStyle.Builder()));
                 return;
             }
             MapSnapshot map = optMap.get();
@@ -198,13 +196,13 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
             int resourceRoomCount = cells.stream().filter(cell -> cell.roomType == RoomType.ROOMTYPE_RESOURCE).toArray().length;
 
             // x was -35
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(5), new TextComponent("Explored Rooms: " + cellCount), new LabelTextStyle.Builder()));
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(15), new TextComponent("Inscription Rooms: " + inscriptionCount), new LabelTextStyle.Builder()));
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(25), new TextComponent("Marked Rooms: " + markedCount), new LabelTextStyle.Builder()));
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(35), new TextComponent("Omega Rooms: " + omegaRoomCount), new LabelTextStyle.Builder()));
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(45), new TextComponent("Challenge Rooms: " + challengeRoomCount), new LabelTextStyle.Builder()));
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(55), new TextComponent("Ore Rooms: " + oreRoomCount), new LabelTextStyle.Builder()));
-            this.addElement(new LabelElement(spatial.positionX(-55).positionY(65), new TextComponent("Resource Rooms: " + resourceRoomCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(5), new TextComponent("Explored Rooms: " + cellCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(15), new TextComponent("Inscription Rooms: " + inscriptionCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(25), new TextComponent("Marked Rooms: " + markedCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(35), new TextComponent("Omega Rooms: " + omegaRoomCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(45), new TextComponent("Challenge Rooms: " + challengeRoomCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(55), new TextComponent("Ore Rooms: " + oreRoomCount), new LabelTextStyle.Builder()));
+            this.addElement(new LabelElement<>(spatial.positionX(-55).positionY(65), new TextComponent("Resource Rooms: " + resourceRoomCount), new LabelTextStyle.Builder()));
         }
 
 
@@ -229,14 +227,20 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
             float mapRoomWidth = (windowWidth / 49) * 2 * (float) window.zoomVal;
 
             // Tunnel map
-            cells.stream().filter((cell) -> cell.cellType == CellType.CELLTYPE_TUNNEL_X || cell.cellType == CellType.CELLTYPE_TUNNEL_Z).forEach((cell) -> {
-                renderCell(bufferBuilder, cell, parseColor(VaultMap.getCellColor(cell)), (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth);
-            });
+            if (ClientConfig.SHOW_TUNNELS.get()) {
+                for (VaultCell vaultCell : cells) {
+                    if ((vaultCell.cellType == CellType.CELLTYPE_TUNNEL_X || vaultCell.cellType == CellType.CELLTYPE_TUNNEL_Z) && shouldRenderCell(vaultCell)) {
+                        renderCell(bufferBuilder, vaultCell, parseColor(VaultMap.getCellColor(vaultCell)), (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth);
+                    }
+                }
+            }
 
             // cell map
-            cells.stream().filter((cell) -> cell.cellType == CellType.CELLTYPE_ROOM).forEach((cell) -> {
-                renderCell(bufferBuilder, cell, parseColor(VaultMap.getCellColor(cell)), (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth);
-            });
+            for (VaultCell vaultCell : cells) {
+                if (vaultCell.cellType == CellType.CELLTYPE_ROOM && shouldRenderCell(vaultCell)) {
+                    renderCell(bufferBuilder, vaultCell, parseColor(VaultMap.getCellColor(vaultCell)), (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth);
+                }
+            }
 
             bufferBuilder.end();
             BufferUploader.end(bufferBuilder); // render the map
@@ -246,23 +250,27 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
 
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
 
-            cells.stream().filter((cell) -> cell.cellType == CellType.CELLTYPE_ROOM).forEach((cell) -> {
-                if (cell.roomName == null || cell.roomName.equals("")) {
-                    cell.roomName = cell.roomType.name();
+            for (VaultCell vaultCell : cells) {
+                if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
+                    continue;
                 }
 
-                ResourceLocation icon = MapRoomIconUtil.getIconForRoom(cell.roomName);
+                if (vaultCell.roomName == null || vaultCell.roomName.equals("")) {
+                    vaultCell.roomName = vaultCell.roomType.name();
+                }
+
+                ResourceLocation icon = MapRoomIconUtil.getIconForRoom(vaultCell.roomName);
                 RenderSystem.setShaderTexture(0, icon);
                 bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
                 try {
-                    renderTextureCell(bufferBuilder, cell, (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth * 2);
+                    renderTextureCell(bufferBuilder, vaultCell, (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth * 2);
                 } catch (Exception e) {
-                    VaultMapper.LOGGER.error("Failed to render icon for room: " + cell.roomName);
+                    VaultMapper.LOGGER.error("Failed to render icon for room: " + vaultCell.roomName);
                 }
                 bufferBuilder.end();
                 BufferUploader.end(bufferBuilder);
-            });
+            }
 
             RenderSystem.enableBlend();
             RenderSystem.disableTexture();
