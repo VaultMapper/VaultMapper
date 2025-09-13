@@ -32,7 +32,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer.parseColor;
-import static java.lang.Math.abs;
 
 public class MapContainerElement extends VerticalScrollClipContainer<MapContainerElement> {
     boolean isDragging;
@@ -229,7 +228,7 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
 
             // Tunnel map
             if (ClientConfig.SHOW_TUNNELS.get()) {
-                for (VaultCell vaultCell : VaultMap.cells) {
+                for (VaultCell vaultCell : cells) {
                     if ((vaultCell.cellType == CellType.CELLTYPE_TUNNEL_X || vaultCell.cellType == CellType.CELLTYPE_TUNNEL_Z) && shouldRenderCell(vaultCell)) {
                         renderCell(bufferBuilder, vaultCell, parseColor(VaultMap.getCellColor(vaultCell)), (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth);
                     }
@@ -237,7 +236,7 @@ public class MapContainerElement extends VerticalScrollClipContainer<MapContaine
             }
 
             // cell map
-            for (VaultCell vaultCell : VaultMap.cells) {
+            for (VaultCell vaultCell : cells) {
                 if (vaultCell.cellType == CellType.CELLTYPE_ROOM && shouldRenderCell(vaultCell)) {
                     renderCell(bufferBuilder, vaultCell, parseColor(VaultMap.getCellColor(vaultCell)), (float) (w / 2 + window.mapCenterX), (float) (125 + window.mapCenterZ), mapRoomWidth);
                 }
