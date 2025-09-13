@@ -101,9 +101,7 @@ public class VaultMapperConfigScreen extends Screen {
             ClientConfig.SPEC.save();
             button.setMessage(ClientConfig.PLAYER_CENTRIC_RENDERING.get() ? enabledText : disabledText);
             },
-            (pButton, pPoseStack, pMouseX, pMouseY) -> {
-                renderTooltip(pPoseStack, new TextComponent("Player Centric Rendering"), pMouseX, pMouseY);
-            });
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Player Centric Rendering"), pMouseX, pMouseY));
         this.addRenderableWidget(playerCentric);
 
         Button enablePCBorderButton = new Button(this.width / 2 + width + 15 + 2 + elHeight, getScaledY(4), elHeight, Math.min(elHeight, 20), ClientConfig.PC_BORDER.get() ? enabledText : disabledText, button -> {
@@ -175,9 +173,7 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, pointerColor, colorPicker);
         this.addRenderableWidget(pointerColorPicker);
-        pointerColor.setResponder((value) -> {
-            pointerColorPicker.setColor(parseColor(value));
-        });
+        pointerColor.setResponder((value) -> pointerColorPicker.setColor(parseColor(value)));
 
         EditBoxReset roomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(11), elWidthColor, elHeight, new TextComponent("ROOM_COLOR"), "#0000FF");
         roomColor.setValue(ClientConfig.ROOM_COLOR.get());
@@ -186,9 +182,15 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, roomColor, colorPicker);
         this.addRenderableWidget(roomColorPicker);
-        roomColor.setResponder((value) -> {
-            roomColorPicker.setColor(parseColor(value));
-        });
+        roomColor.setResponder((value) -> roomColorPicker.setColor(parseColor(value)));
+
+        Button showTunnels = new Button(this.width / 2 + elWidthColor + 5 + 10 + elHeight + 5, getScaledY(11), elHeight, Math.min(elHeight, 20),  ClientConfig.SHOW_TUNNELS.get() ? enabledText : disabledText, button -> {
+            ClientConfig.SHOW_TUNNELS.set(!ClientConfig.SHOW_TUNNELS.get());
+            ClientConfig.SPEC.save();
+            button.setMessage(ClientConfig.SHOW_TUNNELS.get() ? enabledText : disabledText);
+        },
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Show Tunnels"), pMouseX, pMouseY));
+        this.addRenderableWidget(showTunnels);
 
         EditBoxReset startRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(12), elWidthColor, elHeight, new TextComponent("START_ROOM_COLOR"), "#FF0000");
         startRoomColor.setValue(ClientConfig.START_ROOM_COLOR.get());
@@ -208,9 +210,7 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, markedRoomColor, colorPicker);
         this.addRenderableWidget(markedRoomColorPicker);
-        markedRoomColor.setResponder((value) -> {
-            markedRoomColorPicker.setColor(parseColor(value));
-        });
+        markedRoomColor.setResponder((value) -> markedRoomColorPicker.setColor(parseColor(value)));
 
         EditBoxReset inscriptionRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(14), elWidthColor, elHeight, new TextComponent("INSCRIPTION_ROOM_COLOR"), "#FFFF00");
         inscriptionRoomColor.setValue(ClientConfig.INSCRIPTION_ROOM_COLOR.get());
@@ -219,17 +219,13 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, inscriptionRoomColor, colorPicker);
         this.addRenderableWidget(inscriptionRoomColorPicker);
-        inscriptionRoomColor.setResponder((value) -> {
-            inscriptionRoomColorPicker.setColor(parseColor(value));
-        });
+        inscriptionRoomColor.setResponder((value) -> inscriptionRoomColorPicker.setColor(parseColor(value)));
         Button showInscription = new Button(this.width / 2 + elWidthColor + 5 + 10 + elHeight + 5, getScaledY(14), elHeight, Math.min(elHeight, 20),  ClientConfig.SHOW_INSCRIPTIONS.get() ? enabledText : disabledText, button -> {
             ClientConfig.SHOW_INSCRIPTIONS.set(!ClientConfig.SHOW_INSCRIPTIONS.get());
             ClientConfig.SPEC.save();
             button.setMessage(ClientConfig.SHOW_INSCRIPTIONS.get() ? enabledText : disabledText);
         },
-            (pButton, pPoseStack, pMouseX, pMouseY) -> {
-                renderTooltip(pPoseStack, new TextComponent("Show Inscriptions"), pMouseX, pMouseY);
-            });
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Show Inscriptions"), pMouseX, pMouseY));
         this.addRenderableWidget(showInscription);
 
         EditBoxReset omegaRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(15), elWidthColor, elHeight, new TextComponent("OMEGA_ROOM_COLOR"), "#55FF55");
@@ -239,9 +235,7 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, omegaRoomColor, colorPicker);
         this.addRenderableWidget(omegaRoomColorPicker);
-        omegaRoomColor.setResponder((value) -> {
-            omegaRoomColorPicker.setColor(parseColor(value));
-        });
+        omegaRoomColor.setResponder((value) -> omegaRoomColorPicker.setColor(parseColor(value)));
 
         EditBoxReset challengeRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(16), elWidthColor, elHeight, new TextComponent("CHALLENGE_ROOM_COLOR"), "#F09E00");
         challengeRoomColor.setValue(ClientConfig.CHALLENGE_ROOM_COLOR.get());
@@ -250,9 +244,7 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, challengeRoomColor, colorPicker);
         this.addRenderableWidget(challengeRoomColorPicker);
-        challengeRoomColor.setResponder((value) -> {
-            challengeRoomColorPicker.setColor(parseColor(value));
-        });
+        challengeRoomColor.setResponder((value) -> challengeRoomColorPicker.setColor(parseColor(value)));
 
         EditBoxReset oreRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(17), elWidthColor, elHeight, new TextComponent("ORE_ROOM_COLOR"), "#00FFFF");
         oreRoomColor.setValue(ClientConfig.ORE_ROOM_COLOR.get());
@@ -261,9 +253,7 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, oreRoomColor, colorPicker);
         this.addRenderableWidget(oreRoomColorPicker);
-        oreRoomColor.setResponder((value) -> {
-            oreRoomColorPicker.setColor(parseColor(value));
-        });
+        oreRoomColor.setResponder((value) -> oreRoomColorPicker.setColor(parseColor(value)));
 
         EditBoxReset resourceRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(18), elWidthColor, elHeight, new TextComponent("RESOURCE_ROOM_COLOR"), "#FFFFFF");
         resourceRoomColor.setValue(ClientConfig.RESOURCE_ROOM_COLOR.get());
@@ -281,9 +271,7 @@ public class VaultMapperConfigScreen extends Screen {
             ClientConfig.SPEC.save();
             button.setMessage(ClientConfig.SHOW_ROOM_ICONS.get() ? enabledText : disabledText);
             },
-            (pButton, pPoseStack, pMouseX, pMouseY) -> {
-                renderTooltip(pPoseStack, new TextComponent("Show Room Icons"), pMouseX, pMouseY);
-            });
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Show Room Icons"), pMouseX, pMouseY));
         this.addRenderableWidget(showRoomIcons);
 
         EditBoxReset syncServer = new EditBoxReset(this.font, this.width / 2 - 70, getScaledY(19), elWidthColor + 80, elHeight, new TextComponent("SYNC_SERVER"), "wss://vmsync.ndmh.xyz");
@@ -295,9 +283,7 @@ public class VaultMapperConfigScreen extends Screen {
             ClientConfig.SPEC.save();
             button.setMessage(ClientConfig.SYNC_ENABLED.get() ? enabledText : disabledText);
             },
-            (pButton, pPoseStack, pMouseX, pMouseY) -> {
-                renderTooltip(pPoseStack, new TextComponent("Sync"), pMouseX, pMouseY);
-            });
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Sync"), pMouseX, pMouseY));
         this.addRenderableWidget(enableSyncButton);
 
         Button showViewerCodeButton = new Button(this.width / 2 + elWidthColor + 5 + 10 + elHeight + 5, getScaledY(19), elHeight, elHeight, ClientConfig.SHOW_VIEWER_CODE.get() ? enabledText : disabledText, button -> {
@@ -305,9 +291,7 @@ public class VaultMapperConfigScreen extends Screen {
             ClientConfig.SPEC.save();
             button.setMessage(ClientConfig.SHOW_VIEWER_CODE.get() ? enabledText : disabledText);
         },
-            (pButton, pPoseStack, pMouseX, pMouseY) -> {
-                renderTooltip(pPoseStack, new TextComponent("Show Viewer Code"), pMouseX, pMouseY);
-            });
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Show Viewer Code"), pMouseX, pMouseY));
         this.addRenderableWidget(showViewerCodeButton);
 
         EditBoxReset syncColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(20), elWidthColor, elHeight, new TextComponent("SYNC_COLOR"), Util.RandomColor());
@@ -317,9 +301,7 @@ public class VaultMapperConfigScreen extends Screen {
 
         }, syncColor, colorPicker);
         this.addRenderableWidget(syncColorPicker);
-        syncColor.setResponder((value) -> {
-            syncColorPicker.setColor(parseColor(value));
-        });
+        syncColor.setResponder((value) -> syncColorPicker.setColor(parseColor(value)));
 
         Button saveButton = new Button(this.width - 100 - 5, this.height - 20 - 5, 100,  20, new TextComponent("Save"), button -> {
             try {
