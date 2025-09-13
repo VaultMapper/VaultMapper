@@ -348,6 +348,9 @@ public class VaultMapOverlayRenderer {
     }
 
     public static void renderCellBorder(BufferBuilder bufferBuilder, VaultCell cell, int color) {
+        if (!shouldRenderCell(cell)) {
+            return;
+        }
         var cellCenter = getCellCenter(cell);
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
