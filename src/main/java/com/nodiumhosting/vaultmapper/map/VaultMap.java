@@ -277,7 +277,9 @@ public class VaultMap {
             } else if (newCell.roomName.contains("/ore")) {
                 newCell.roomType = RoomType.ROOMTYPE_ORE;
             }
-            if (syncClient != null) syncClient.sendCellPacket(newCell);
+        }
+        if (syncClient != null) {
+            syncClient.sendCellPacket(newCell);
         }
         addOrReplaceCell(newCell);
         MapCache.updateCache();
