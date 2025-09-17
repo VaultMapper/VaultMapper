@@ -164,7 +164,7 @@ public class VaultMapOverlayRenderer {
 
             // cell map
             for (VaultCell cell : VaultMap.cells) {
-                if (cell.cellType == CellType.CELLTYPE_ROOM && (cell.inscripted || cell.marked)) {
+                if (cell.cellType == CellType.CELLTYPE_ROOM && (cell.inscripted || cell.marked) && shouldRenderCell(cell)) {
                     renderCellBorder(bufferBuilder, cell, parseColor(VaultMap.getCellColor(cell)));
                 }
             }
@@ -348,9 +348,6 @@ public class VaultMapOverlayRenderer {
     }
 
     public static void renderCellBorder(BufferBuilder bufferBuilder, VaultCell cell, int color) {
-        if (!shouldRenderCell(cell)) {
-            return;
-        }
         var cellCenter = getCellCenter(cell);
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
