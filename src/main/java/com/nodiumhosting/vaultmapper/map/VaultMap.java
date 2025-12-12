@@ -15,6 +15,7 @@ import iskallia.vault.core.vault.stat.StatsCollector;
 import iskallia.vault.init.ModBlocks;
 import iskallia.vault.init.ModConfigs;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -29,9 +30,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import vazkii.quark.base.module.config.Config;
 
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +63,8 @@ public class VaultMap {
     static int westSize = defaultMapSize;
     static CompoundTag hologramData;
     static boolean hologramChecked;
+    private static int discoveredRoomSizeCache = 1;
+    private static int clientTickCount = 0;
     // TODO: do this properly
     private static float oldYaw;
     private static int oldRoomX;
@@ -238,6 +243,8 @@ public class VaultMap {
         int playerRelativeX = (int) Math.abs(Math.floor(player.getX() % 47));
         int playerRelativeZ = (int) Math.abs(Math.floor(player.getZ() % 47));
 
+
+
         CellType cellType = getCellType(playerRoomX, playerRoomZ);
         if (cellType == null) return; // not all blocks are loaded - retry later
         else if (cellType == CellType.CELLTYPE_ROOM && (playerRoomX != 0 || playerRoomZ != 0) && !cellCache.containsKey(coord)) {
@@ -257,32 +264,77 @@ public class VaultMap {
         if (cellType == CellType.CELLTYPE_TUNNEL_X && (playerRelativeZ < 18 || playerRelativeZ > 28)) return;
         if (cellType == CellType.CELLTYPE_TUNNEL_Z && (playerRelativeX < 18 || playerRelativeX > 28)) return;
 
-        VaultCell newCell;
-        newCell = cellCache.get(coord);
-        if (newCell == null)
-            newCell = new VaultCell(playerRoomX, playerRoomZ, cellType, RoomType.ROOMTYPE_BASIC); // update current roomv
-        currentRoom = newCell;
-        newCell.setExplored(true);
+        syncNewCell(coord, cellType, player, true);
+        MapCache.updateCache();
+    }
 
-        if (playerRoomX == 0 && playerRoomZ == 0) {
-            newCell.roomType = RoomType.ROOMTYPE_START;
-        } else if (cellType == CellType.CELLTYPE_ROOM && !cellCache.containsKey(coord)) {
-            newCell.roomName = ClientVaults.ACTIVE.get(Vault.STATS).get(player.getUUID()).get(StatCollector.ROOMS_DISCOVERED).get(pos).toString();
-            if (newCell.roomName.contains("omega")) {
-                newCell.roomType = RoomType.ROOMTYPE_OMEGA;
-            } else if (newCell.roomName.contains("challenge")) {
-                newCell.roomType = RoomType.ROOMTYPE_CHALLENGE;
-            } else if (newCell.roomName.contains("raw")) {
-                newCell.roomType = RoomType.ROOMTYPE_RESOURCE;
-            } else if (newCell.roomName.contains("/ore")) {
-                newCell.roomType = RoomType.ROOMTYPE_ORE;
-            }
+    public static void syncNewCell(CellCoordinate coordinate, CellType cellType, Player player, boolean setCurrent) {
+        VaultCell newCell;
+        newCell = cellCache.get(coordinate);
+        if(newCell == null) {
+            newCell = new VaultCell(coordinate.x(), coordinate.z(), cellType, RoomType.ROOMTYPE_BASIC);
         }
-        if (syncClient != null) {
+
+        if(setCurrent) {
+            currentRoom = newCell;
+        }
+
+        inferRoomTypeForCell(coordinate, newCell, player);
+
+        if(syncClient != null) {
             syncClient.sendCellPacket(newCell);
         }
+
         addOrReplaceCell(newCell);
-        MapCache.updateCache();
+    }
+
+    public static void inferRoomTypeForCell(CellCoordinate coordinate, VaultCell cell, Player player) {
+        if (coordinate.x() == 0 && coordinate.z() == 0) {
+            cell.roomType = RoomType.ROOMTYPE_START;
+        } else if (cell.cellType == CellType.CELLTYPE_ROOM && !cellCache.containsKey(coordinate)) {
+            cell.roomName = ClientVaults.ACTIVE.get(Vault.STATS).get(player.getUUID()).get(StatCollector.ROOMS_DISCOVERED).get(new BlockPos(coordinate.x(), 0, coordinate.z())).toString();
+            if (cell.roomName.contains("omega")) {
+                cell.roomType = RoomType.ROOMTYPE_OMEGA;
+            } else if (cell.roomName.contains("challenge")) {
+                cell.roomType = RoomType.ROOMTYPE_CHALLENGE;
+            } else if (cell.roomName.contains("raw")) {
+                cell.roomType = RoomType.ROOMTYPE_RESOURCE;
+            } else if (cell.roomName.contains("/ore")) {
+                cell.roomType = RoomType.ROOMTYPE_ORE;
+            }
+        }
+
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public static void updateMapFromDiscoveryData(TickEvent.ClientTickEvent event) {
+        if(event.phase.equals(TickEvent.Phase.END)) {
+            clientTickCount++;
+            if(clientTickCount % 20 == 0) {
+                clientTickCount = 0;
+                StatsCollector stats = ClientVaults.ACTIVE.get(Vault.STATS);
+                LocalPlayer player = Minecraft.getInstance().player;
+                if(player == null) {
+                    return;
+                }
+
+                StatCollector stat = stats == null ? null : stats.get(Minecraft.getInstance().player.getUUID());
+                DiscoveredRoomStat discovered = stat == null ? null : stat.get(StatCollector.ROOMS_DISCOVERED);
+                if(discovered != null) {
+                    //If the size of the discovered rooms data has changed, we want to go ahead and grab any discovered rooms that are now present (from Globe activation for example)
+                    if(discoveredRoomSizeCache != discovered.size()) {
+                        discoveredRoomSizeCache = discovered.size();
+                        discovered.forEach((blockPos, resourceLocation) -> {
+                            CellCoordinate coordinate = new CellCoordinate(blockPos.getX(), blockPos.getZ());
+                            if(!cellCache.containsKey(coordinate)) {
+                                syncNewCell(coordinate, CellType.CELLTYPE_ROOM, player, false);
+                            }
+                        });
+                        MapCache.updateCache();
+                    }
+                }
+            }
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
@@ -317,6 +369,7 @@ public class VaultMap {
         if (!isCurrentRoom(coord)) { // if were in a different room
             updateMap();
         }
+
 
         if (oldYaw != yaw || playerRoomX != oldRoomX || playerRoomZ != oldRoomZ) {
             oldYaw = yaw;
