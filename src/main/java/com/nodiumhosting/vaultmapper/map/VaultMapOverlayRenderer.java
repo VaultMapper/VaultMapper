@@ -14,7 +14,7 @@ import com.nodiumhosting.vaultmapper.proto.CellType;
 import com.nodiumhosting.vaultmapper.util.MapRoomIconUtil;
 import iskallia.vault.core.vault.ClientVaults;
 import iskallia.vault.core.vault.Vault;
-import iskallia.vault.core.vault.objective.HeraldObjective;
+import iskallia.vault.core.vault.VaultUtils;
 import iskallia.vault.util.McClientHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -56,10 +56,9 @@ public class VaultMapOverlayRenderer {
         if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
         if (!enabled) return;
         if (!ClientConfig.MAP_ENABLED.get()) return;
-        Optional<Vault> vaultOpt = ClientVaults.getActive();
-        if (vaultOpt.isPresent()) {
-            Vault vault = vaultOpt.get();
-            if (!vault.get(Vault.OBJECTIVES).getAll(HeraldObjective.class).isEmpty()) {
+        Vault vault = ClientVaults.getActive().orElse(null);
+        if (vault != null) {
+            if(VaultUtils.isHeraldVault(vault)) {
                 return;
             }
         }
@@ -176,7 +175,13 @@ public class VaultMapOverlayRenderer {
         bufferBuilder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         // player thingies
         for (VaultMap.MapPlayer player : VaultMap.players.values()) {
-            renderPlayerArrow(bufferBuilder, player);
+            if(vault != null) {
+                if(VaultUtils.isPvPVault(vault)) {
+                    break;
+                }
+
+                renderPlayerArrow(bufferBuilder, player);
+            }
         }
         bufferBuilder.end();
         BufferUploader.end(bufferBuilder);
@@ -198,7 +203,13 @@ public class VaultMapOverlayRenderer {
 
         if (Minecraft.getInstance().options.keyPlayerList.isDown()) {
             for (Map.Entry<String, VaultMap.MapPlayer> entry : VaultMap.players.entrySet()) {
-                renderPlayerName(event.getMatrixStack(), entry.getKey(), entry.getValue());
+                if(vault != null) {
+                    if(VaultUtils.isPvPVault(vault)) {
+                        return;
+                    }
+
+                    renderPlayerName(event.getMatrixStack(), entry.getKey(), entry.getValue());
+                }
             }
         }
     }
@@ -560,12 +571,12 @@ public class VaultMapOverlayRenderer {
     public static Vec2 getCellCenter(VaultCell cell) {
         if (playerCentricRender){
             return new Vec2(
-                centerX + (cell.x - playerX) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                centerZ + (cell.z - playerZ) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                    centerX + (cell.x - playerX) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
+                    centerZ + (cell.z - playerZ) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
             );
         }
         return new Vec2(
-            centerX + (cell.x) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
+                centerX + (cell.x) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
                 centerZ + (cell.z) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
         );
     }
