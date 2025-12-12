@@ -243,13 +243,14 @@ public class VaultMap {
         int playerRelativeX = (int) Math.abs(Math.floor(player.getX() % 47));
         int playerRelativeZ = (int) Math.abs(Math.floor(player.getZ() % 47));
 
-        StatsCollector stats = ClientVaults.ACTIVE.get(Vault.STATS);
-        StatCollector stat = stats == null ? null : stats.get(player.getUUID());
-        DiscoveredRoomStat discovered = stat == null ? null : stat.get(StatCollector.ROOMS_DISCOVERED);
+
 
         CellType cellType = getCellType(playerRoomX, playerRoomZ);
         if (cellType == null) return; // not all blocks are loaded - retry later
         else if (cellType == CellType.CELLTYPE_ROOM && (playerRoomX != 0 || playerRoomZ != 0) && !cellCache.containsKey(coord)) {
+            StatsCollector stats = ClientVaults.ACTIVE.get(Vault.STATS);
+            StatCollector stat = stats == null ? null : stats.get(player.getUUID());
+            DiscoveredRoomStat discovered = stat == null ? null : stat.get(StatCollector.ROOMS_DISCOVERED);
             if (discovered == null || discovered.get(pos) == null) {
                 // we are in a room that is not discovered yet - wait until its discovered
                 return;
