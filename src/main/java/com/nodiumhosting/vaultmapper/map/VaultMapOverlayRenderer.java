@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.proto.CellType;
+import com.nodiumhosting.vaultmapper.proto.RoomType;
 import com.nodiumhosting.vaultmapper.util.MapRoomIconUtil;
 import iskallia.vault.core.vault.ClientVaults;
 import iskallia.vault.core.vault.Vault;
@@ -28,10 +29,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static java.lang.Math.abs;
 
@@ -125,6 +123,8 @@ public class VaultMapOverlayRenderer {
         if (ClientConfig.SHOW_ROOM_ICONS.get()) {
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.disableBlend();
+            renderRoomType(bufferBuilder, RoomType.ROOMTYPE_BASIC);
+            renderRoomType(bufferBuilder, RoomType.ROOMTYPE_ORE);
             for (VaultCell vaultCell : VaultMap.cells) {
                 if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
                     continue;
@@ -132,6 +132,10 @@ public class VaultMapOverlayRenderer {
 
                 if (vaultCell.roomName == null || vaultCell.roomName.isEmpty()) {
                     vaultCell.roomName = vaultCell.roomType.name();
+                }
+
+                if (vaultCell.roomType == RoomType.ROOMTYPE_BASIC || vaultCell.roomType == RoomType.ROOMTYPE_ORE) {
+                    continue;
                 }
 
                 try {
@@ -211,6 +215,47 @@ public class VaultMapOverlayRenderer {
                     renderPlayerName(event.getMatrixStack(), entry.getKey(), entry.getValue());
                 }
             }
+        }
+    }
+
+
+    /**
+     * Renders all rooms with the same texture (texture of the first room of specified type in the cell list)
+     */
+    private static void renderRoomType(BufferBuilder bufferBuilder, RoomType roomType){
+        ResourceLocation icon = null;
+        for (VaultCell vaultCell : VaultMap.cells) {
+            if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
+                continue;
+            }
+
+            if (vaultCell.roomName == null || vaultCell.roomName.isEmpty()) {
+                vaultCell.roomName = vaultCell.roomType.name();
+            }
+
+            if (vaultCell.roomType != roomType) {
+                continue;
+            }
+
+            try {
+                if (icon == null) {
+                    // first room => set texture
+                    icon = MapRoomIconUtil.getIconForRoom(vaultCell.roomName);
+                    if (icon == null) {
+                        VaultMapper.LOGGER.error("Icon {} not found for room: {}", icon, vaultCell.roomName);
+                        continue;
+                    }
+                    RenderSystem.setShaderTexture(0, icon);
+                    bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+                }
+                renderTextureCell(bufferBuilder, vaultCell);
+            } catch (Exception e) {
+                VaultMapper.LOGGER.error("Failed to render icon for room: " + vaultCell.roomName);
+            }
+        }
+        if (icon != null) {
+            bufferBuilder.end();
+            BufferUploader.end(bufferBuilder);
         }
     }
 
