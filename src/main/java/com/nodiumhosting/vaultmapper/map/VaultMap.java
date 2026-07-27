@@ -2,18 +2,9 @@ package com.nodiumhosting.vaultmapper.map;
 
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
-import com.nodiumhosting.vaultmapper.config.BrazierTargetConfigManager;
 import com.nodiumhosting.vaultmapper.config.RoomSignatureConfig;
 import com.nodiumhosting.vaultmapper.config.RoomSignatureConfigManager;
-import com.nodiumhosting.vaultmapper.config.RoomSpecialDetectionConfig;
-import com.nodiumhosting.vaultmapper.config.RoomSpecialDetectionConfigManager;
-import com.nodiumhosting.vaultmapper.config.RoomSpecialFeatureDefinition;
-import com.nodiumhosting.vaultmapper.config.RoomSpecialScanToggleConfigManager;
-import com.nodiumhosting.vaultmapper.map.special.RoomSpecialNbtParser;
-import com.nodiumhosting.vaultmapper.map.special.RoomSpecialTextRenderer;
-import com.nodiumhosting.vaultmapper.map.special.DetectedSpecialFeature;
-import com.nodiumhosting.vaultmapper.map.special.FeatureDetectorRegistry;
-import com.nodiumhosting.vaultmapper.map.special.RoomSpecialFeatureDetector;
+import com.nodiumhosting.vaultmapper.map.special.RoomSpecialFeatureCoordinator;
 import com.nodiumhosting.vaultmapper.map.snapshots.MapCache;
 import com.nodiumhosting.vaultmapper.network.sync.SyncClient;
 import com.nodiumhosting.vaultmapper.proto.CellType;
@@ -51,12 +42,10 @@ import vazkii.quark.base.module.config.Config;
 
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.lang.reflect.Field;
@@ -101,34 +90,9 @@ public class VaultMap {
     private static long lastCacheWriteAtMs = 0L;
     private static final long CACHE_WRITE_COOLDOWN_MS = 750L;
     private static final long NBT_PROBE_COOLDOWN_MS = 750L;
-    private static final int ROOM_SPECIAL_SCAN_BUDGET_PER_TICK = 3000;
-    private static final int MAX_GOD_ALTARS_PER_ROOM = 2;
-    private static final int MAX_PYLONS_PER_ROOM = 3;
-    private static final int ROOM_SPECIAL_SCAN_Y_RANGE = 30;
     private static Direction startRoomTunnelDirection = Direction.NORTH;
     private static boolean startRoomOrientationResolved = false;
     private static boolean quickMapHiddenInVault = false;
-    private static CellCoordinate currentRoomSpecialScanCoord = null;
-    private static int currentRoomSpecialScanMinY = 0;
-    private static int currentRoomSpecialScanMaxY = 0;
-    private static int currentRoomSpecialScanCursor = 0;
-    private static boolean currentRoomSpecialScanDone = false;
-    private static boolean currentRoomSpecialScanGodEnabled = false;
-    private static boolean currentRoomSpecialScanBrazierEnabled = false;
-    private static boolean currentRoomSpecialScanPylonEnabled = false;
-    private static String currentRoomBrazierModifiersText = null;
-    private static BlockPos currentRoomBrazierPos = null;
-    private static Integer currentRoomBrazierMatchIndex = null;
-    private static String currentRoomCakeText = null;
-    private static BlockPos currentRoomCakePos = null;
-    private static final ArrayList<RoomSpecialPoint> currentRoomGodAltars = new ArrayList<>();
-    private static final ArrayList<RoomSpecialPoint> currentRoomPylons = new ArrayList<>();
-    private static String currentRoomBrazierAnnouncedText = null;
-    private static String currentRoomCakeAnnouncedText = null;
-    private static final Set<String> currentRoomGodAltarAnnouncedLines = new LinkedHashSet<>();
-    private static final Set<String> currentRoomPylonAnnouncedLines = new LinkedHashSet<>();
-    private static final ConcurrentHashMap<CellCoordinate, RoomSpecialDetectionCacheEntry> roomSpecialDetectionCache = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<CellCoordinate, RoomSpecialScanProgressEntry> roomSpecialScanProgressCache = new ConcurrentHashMap<>();
     // TODO: do this properly
     private static float oldYaw;
     private static int oldRoomX;
@@ -234,9 +198,7 @@ public class VaultMap {
         startRoomTunnelDirection = Direction.NORTH;
         startRoomOrientationResolved = false;
         quickMapHiddenInVault = false;
-        clearCurrentRoomSpecialDetections();
-        roomSpecialDetectionCache.clear();
-        roomSpecialScanProgressCache.clear();
+        RoomSpecialFeatureCoordinator.invalidateRoomSpecialDetections();
 
         northSize = defaultMapSize;
         eastSize = defaultMapSize;
@@ -645,860 +607,103 @@ public class VaultMap {
     }
 
     public static String getCurrentRoomBrazierOverlayText() {
-        if (currentRoomBrazierModifiersText == null || currentRoomBrazierPos == null) {
-            return null;
-        }
-        int playerY = Minecraft.getInstance().player == null ? currentRoomBrazierPos.getY() : Minecraft.getInstance().player.blockPosition().getY();
-        return getVerticalRelationKey(currentRoomBrazierPos, playerY) + "|" + currentRoomBrazierModifiersText;
+        return RoomSpecialFeatureCoordinator.getCurrentRoomBrazierOverlayText();
     }
 
     public static String getCurrentRoomCakeOverlayText() {
-        if (currentRoomCakeText == null || currentRoomCakePos == null) {
-            return null;
-        }
-        int playerY = Minecraft.getInstance().player == null ? currentRoomCakePos.getY() : Minecraft.getInstance().player.blockPosition().getY();
-        return getVerticalRelationKey(currentRoomCakePos, playerY) + "|" + currentRoomCakeText;
+        return RoomSpecialFeatureCoordinator.getCurrentRoomCakeOverlayText();
     }
 
     public static List<String> getCurrentRoomPylonOverlayLines() {
-        ArrayList<String> lines = new ArrayList<>();
-        int playerY = Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.blockPosition().getY();
-        for (RoomSpecialPoint pylon : currentRoomPylons) {
-            if (pylon == null || pylon.text == null || pylon.text.isEmpty()) {
-                continue;
-            }
-            String displayText = pylon.text;
-            // Highlight time pylons with a distinctive marker
-            if ("time".equals(pylon.type)) {
-                displayText = "⏱ " + displayText + " ⏱";
-            }
-            lines.add(getVerticalRelationKey(pylon.position, playerY) + "|" + displayText);
-        }
-        return lines;
+        return RoomSpecialFeatureCoordinator.getCurrentRoomPylonOverlayLines();
     }
 
     public static boolean currentRoomBrazierMatchesTarget() {
-        return currentRoomBrazierMatchIndex != null;
+        return RoomSpecialFeatureCoordinator.currentRoomBrazierMatchesTarget();
     }
 
     public static Integer getRoomBrazierMatchIndex(VaultCell cell) {
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return null;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.brazierMatchIndex == null) {
-            return null;
-        }
-
-        return cached.brazierMatchIndex + 1;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return null;
+        return RoomSpecialFeatureCoordinator.getRoomBrazierMatchIndex(new CellCoordinate(cell.x, cell.z));
     }
 
     public static String getRoomBrazierMatchIdentifier(VaultCell cell) {
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return null;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.brazierMatchIndex == null) {
-            return null;
-        }
-
-        String identifier = BrazierTargetConfigManager.getIdentifierForIndex(cached.brazierMatchIndex);
-        if (identifier != null && !identifier.isEmpty()) {
-            return identifier;
-        }
-
-        return String.valueOf(cached.brazierMatchIndex + 1);
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return null;
+        return RoomSpecialFeatureCoordinator.getRoomBrazierMatchIdentifier(new CellCoordinate(cell.x, cell.z));
     }
 
     public static String getRoomCenterIndicatorLetter(VaultCell cell) {
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return null;
-        }
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return null;
 
         String roomName = cell.roomName == null ? "" : cell.roomName;
         String lower = roomName.toLowerCase();
 
         if (lower.contains("boss")) {
             String letter = getBossTypeLetter(cell);
-            if (letter != null && !letter.isEmpty()) {
-                return letter;
-            }
+            if (letter != null && !letter.isEmpty()) return letter;
         }
 
         if (lower.contains("challenge/laboratory") || lower.contains("challenge/laboratory2")) {
             String letter = getLaboratoryRewardLetter(cell);
-            if (letter != null && !letter.isEmpty()) {
-                return letter;
-            }
+            if (letter != null && !letter.isEmpty()) return letter;
         }
 
         if (cell.roomType == RoomType.ROOMTYPE_CHALLENGE && (lower.contains("challenge/village") || lower.contains("villagefort"))) {
             String letter = getVillageTypeLetter(cell);
-            if (letter != null && !letter.isEmpty()) {
-                return letter;
-            }
+            if (letter != null && !letter.isEmpty()) return letter;
         }
 
-        String brazierIdentifier = getRoomBrazierMatchIdentifier(cell);
-        if (brazierIdentifier != null && !brazierIdentifier.isEmpty()) {
-            return brazierIdentifier;
-        }
+        String brazierIdentifier = RoomSpecialFeatureCoordinator.getRoomBrazierMatchIdentifier(new CellCoordinate(cell.x, cell.z));
+        if (brazierIdentifier != null && !brazierIdentifier.isEmpty()) return brazierIdentifier;
 
         return null;
     }
 
     public static List<Integer> getRoomGodAltarIndicatorColors(VaultCell cell) {
-        ArrayList<Integer> colors = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return colors;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.godAltars == null || cached.godAltars.isEmpty()) {
-            return colors;
-        }
-
-        for (RoomSpecialPoint altar : cached.godAltars) {
-            if (altar == null || altar.text == null || altar.text.isEmpty()) {
-                continue;
-            }
-
-            int colon = altar.text.indexOf(':');
-            String godName = colon > 0 ? altar.text.substring(0, colon).trim() : altar.text.trim();
-            if (godName.isEmpty()) {
-                continue;
-            }
-
-            String lower = godName.toLowerCase();
-            if ("default".equals(lower) || "unknown".equals(lower)) {
-                continue;
-            }
-
-            int color = RoomSpecialTextRenderer.getGodNameColor(godName);
-            if (color == 0xFFFFFF) {
-                continue;
-            }
-
-            colors.add(color);
-            if (colors.size() >= 2) {
-                break;
-            }
-        }
-
-        return colors;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomGodAltarIndicatorColors(new CellCoordinate(cell.x, cell.z));
     }
 
     public static List<Integer> getRoomPylonIndicatorColors(VaultCell cell) {
-        ArrayList<Integer> colors = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return colors;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.pylons == null || cached.pylons.isEmpty()) {
-            return colors;
-        }
-
-        for (RoomSpecialPoint pylon : cached.pylons) {
-            // Time pylons get a unique blue color; others get standard gold
-            if (pylon != null && "time".equals(pylon.type)) {
-                colors.add(0xFF6600FF); // Bright blue for time pylons
-            } else {
-                colors.add(0xFFD166);  // Standard gold for other pylons
-            }
-        }
-
-        return colors;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomPylonIndicatorColors(new CellCoordinate(cell.x, cell.z));
     }
 
     public static List<BlockPos> getRoomPylonPositions(VaultCell cell) {
-        ArrayList<BlockPos> positions = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return positions;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.pylons == null || cached.pylons.isEmpty()) {
-            return positions;
-        }
-
-        for (RoomSpecialPoint p : cached.pylons) {
-            if (p != null && p.position != null) positions.add(p.position);
-        }
-        return positions;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomPylonPositions(new CellCoordinate(cell.x, cell.z));
     }
 
     public static List<BlockPos> getRoomGodAltarPositions(VaultCell cell) {
-        ArrayList<BlockPos> positions = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return positions;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.godAltars == null || cached.godAltars.isEmpty()) {
-            return positions;
-        }
-
-        for (RoomSpecialPoint p : cached.godAltars) {
-            if (p != null && p.position != null) positions.add(p.position);
-        }
-        return positions;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomGodAltarPositions(new CellCoordinate(cell.x, cell.z));
     }
 
     public static List<BlockPos> getRoomCakePositions(VaultCell cell) {
-        ArrayList<BlockPos> positions = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return positions;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null) return positions;
-        if (cached.cakePosition != null) {
-            positions.add(cached.cakePosition);
-        }
-        return positions;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomCakePositions(new CellCoordinate(cell.x, cell.z));
     }
 
     public static List<String> getRoomPylonTypes(VaultCell cell) {
-        ArrayList<String> types = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return types;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.pylons == null || cached.pylons.isEmpty()) {
-            return types;
-        }
-
-        for (RoomSpecialPoint pylon : cached.pylons) {
-            types.add(pylon.type); // may be null for non-time pylons
-        }
-        return types;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomPylonTypes(new CellCoordinate(cell.x, cell.z));
     }
 
     public static List<Integer> getRoomCakeIndicatorColors(VaultCell cell) {
-        ArrayList<Integer> colors = new ArrayList<>();
-        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) {
-            return colors;
-        }
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(new CellCoordinate(cell.x, cell.z));
-        if (cached == null || cached.cakeText == null || cached.cakeText.isEmpty()) {
-            return colors;
-        }
-
-        colors.add(0xFFD166);
-        return colors;
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM) return new ArrayList<>();
+        return RoomSpecialFeatureCoordinator.getRoomCakeIndicatorColors(new CellCoordinate(cell.x, cell.z));
     }
 
     public static void invalidateBrazierTargetMatches() {
-        invalidateRoomSpecialDetections();
+        RoomSpecialFeatureCoordinator.invalidateRoomSpecialDetections();
     }
 
     public static void invalidateRoomSpecialDetections() {
-        roomSpecialDetectionCache.clear();
-        roomSpecialScanProgressCache.clear();
-        clearCurrentRoomSpecialDetections();
+        RoomSpecialFeatureCoordinator.invalidateRoomSpecialDetections();
     }
 
     public static List<String> getCurrentRoomGodAltarOverlayLines() {
-        ArrayList<String> lines = new ArrayList<>();
-        int playerY = Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.blockPosition().getY();
-        for (RoomSpecialPoint altar : currentRoomGodAltars) {
-            if (altar == null || altar.text == null) {
-                continue;
-            }
-            String lower = altar.text.toLowerCase();
-            if (lower.startsWith("default:") || lower.startsWith("unknown:")) {
-                continue;
-            }
-            lines.add(getVerticalRelationKey(altar.position, playerY) + "|" + altar.text);
-        }
-        return lines;
-    }
-
-    private static String getVerticalRelationKey(BlockPos position, int playerY) {
-        return RoomSpecialNbtParser.getVerticalRelationKey(position.getY(), playerY);
-    }
-
-    private static void clearCurrentRoomSpecialDetections() {
-        currentRoomSpecialScanCoord = null;
-        currentRoomSpecialScanMinY = 0;
-        currentRoomSpecialScanMaxY = 0;
-        currentRoomSpecialScanCursor = 0;
-        currentRoomSpecialScanDone = false;
-        currentRoomSpecialScanGodEnabled = false;
-        currentRoomSpecialScanBrazierEnabled = false;
-        currentRoomSpecialScanPylonEnabled = false;
-        currentRoomBrazierModifiersText = null;
-        currentRoomBrazierPos = null;
-        currentRoomBrazierMatchIndex = null;
-        currentRoomCakeText = null;
-        currentRoomCakePos = null;
-        currentRoomGodAltars.clear();
-        currentRoomPylons.clear();
-        currentRoomBrazierAnnouncedText = null;
-        currentRoomCakeAnnouncedText = null;
-        currentRoomGodAltarAnnouncedLines.clear();
-        currentRoomPylonAnnouncedLines.clear();
-    }
-
-    private static class RoomSpecialPoint {
-        private final String text;
-        private final BlockPos position;
-        private final String type;  // e.g., "time" for time pylons
-
-        private RoomSpecialPoint(String text, BlockPos position) {
-            this(text, position, null);
-        }
-
-        private RoomSpecialPoint(String text, BlockPos position, String type) {
-            this.text = text;
-            this.position = position;
-            this.type = type;
-        }
-    }
-
-    private static void upsertGodAltarPoint(ArrayList<RoomSpecialPoint> altars, BlockPos position, String line) {
-        for (int i = 0; i < altars.size(); i++) {
-            RoomSpecialPoint existing = altars.get(i);
-            if (!existing.position.equals(position)) {
-                continue;
-            }
-
-            if (!existing.text.equals(line)) {
-                altars.set(i, new RoomSpecialPoint(line, position));
-            }
-            return;
-        }
-
-        if (altars.size() < MAX_GOD_ALTARS_PER_ROOM) {
-            altars.add(new RoomSpecialPoint(line, position));
-        }
-    }
-
-    private static void upsertSpecialPoint(ArrayList<RoomSpecialPoint> points, int maxPoints, BlockPos position, String line, String type) {
-        for (int i = 0; i < points.size(); i++) {
-            RoomSpecialPoint existing = points.get(i);
-            if (!existing.position.equals(position)) {
-                continue;
-            }
-
-            if (!existing.text.equals(line) || !java.util.Objects.equals(existing.type, type)) {
-                points.set(i, new RoomSpecialPoint(line, position, type));
-            }
-            return;
-        }
-
-        if (points.size() < maxPoints) {
-            points.add(new RoomSpecialPoint(line, position, type));
-        }
-    }
-
-    private static void upsertSpecialPoint(ArrayList<RoomSpecialPoint> points, int maxPoints, BlockPos position, String line) {
-        upsertSpecialPoint(points, maxPoints, position, line, null);
-    }
-
-    private static boolean hasOnlyResolvedGodAltars(List<RoomSpecialPoint> altars) {
-        if (altars == null || altars.isEmpty()) {
-            return false;
-        }
-        for (RoomSpecialPoint altar : altars) {
-            if (altar == null || altar.text == null) {
-                return false;
-            }
-            String lower = altar.text.toLowerCase();
-            if (lower.startsWith("default:") || lower.startsWith("unknown:")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static class RoomSpecialDetectionCacheEntry {
-        private final String brazierModifiers;
-        private final BlockPos brazierPosition;
-        private final Integer brazierMatchIndex;
-        private final String cakeText;
-        private final BlockPos cakePosition;
-        private final ArrayList<RoomSpecialPoint> godAltars;
-        private final ArrayList<RoomSpecialPoint> pylons;
-
-        private RoomSpecialDetectionCacheEntry(String brazierModifiers, BlockPos brazierPosition, Integer brazierMatchIndex, String cakeText, BlockPos cakePosition, List<RoomSpecialPoint> godAltars, List<RoomSpecialPoint> pylons) {
-            this.brazierModifiers = brazierModifiers;
-            this.brazierPosition = brazierPosition;
-            this.brazierMatchIndex = brazierMatchIndex;
-            this.cakeText = cakeText;
-            this.cakePosition = cakePosition;
-            this.godAltars = new ArrayList<>(godAltars);
-            this.pylons = new ArrayList<>(pylons);
-        }
-    }
-
-    private static class RoomSpecialScanProgressEntry {
-        private final int minY;
-        private final int maxY;
-        private final int cursor;
-        private final boolean scanGodEnabled;
-        private final boolean scanBrazierEnabled;
-        private final boolean scanPylonEnabled;
-
-        private RoomSpecialScanProgressEntry(int minY, int maxY, int cursor, boolean scanGodEnabled, boolean scanBrazierEnabled, boolean scanPylonEnabled) {
-            this.minY = minY;
-            this.maxY = maxY;
-            this.cursor = cursor;
-            this.scanGodEnabled = scanGodEnabled;
-            this.scanBrazierEnabled = scanBrazierEnabled;
-            this.scanPylonEnabled = scanPylonEnabled;
-        }
-    }
-
-    private static Integer findMatchingBrazierTargetIndex(CompoundTag modifiersTag) {
-        return RoomSpecialNbtParser.findMatchingBrazierTargetIndex(modifiersTag);
-    }
-
-    private static String extractGodName(BlockState state, CompoundTag nbt) {
-        return RoomSpecialNbtParser.extractGodName(state, nbt);
-    }
-
-    private static String extractGodChallengeTitle(CompoundTag nbt) {
-        return RoomSpecialNbtParser.extractGodChallengeTitle(nbt);
-    }
-
-    private static String parseBrazierModifiers(CompoundTag nbt) {
-        return RoomSpecialNbtParser.parseBrazierModifiers(nbt);
-    }
-
-    private static void startCurrentRoomSpecialScan(CellCoordinate roomCoordinate, int playerY, Player player, boolean scanGod, boolean scanBrazier, boolean scanPylon) {
-        if (currentRoomSpecialScanCoord != null
-                && (currentRoomSpecialScanCoord.x() != roomCoordinate.x() || currentRoomSpecialScanCoord.z() != roomCoordinate.z())) {
-            persistCurrentRoomSpecialDetections();
-            persistCurrentRoomSpecialScanProgress();
-        }
-
-        currentRoomSpecialScanCoord = roomCoordinate;
-        currentRoomSpecialScanCursor = 0;
-        currentRoomSpecialScanDone = false;
-        currentRoomSpecialScanGodEnabled = scanGod;
-        currentRoomSpecialScanBrazierEnabled = scanBrazier;
-        currentRoomSpecialScanPylonEnabled = scanPylon;
-        currentRoomBrazierModifiersText = null;
-        currentRoomBrazierPos = null;
-        currentRoomBrazierMatchIndex = null;
-        currentRoomCakeText = null;
-        currentRoomCakePos = null;
-        currentRoomGodAltars.clear();
-        currentRoomPylons.clear();
-        currentRoomBrazierAnnouncedText = null;
-        currentRoomCakeAnnouncedText = null;
-        currentRoomGodAltarAnnouncedLines.clear();
-        currentRoomPylonAnnouncedLines.clear();
-
-        RoomSpecialDetectionCacheEntry cached = roomSpecialDetectionCache.get(roomCoordinate);
-        if (cached != null) {
-            if (scanBrazier) {
-                currentRoomBrazierModifiersText = cached.brazierModifiers;
-                currentRoomBrazierPos = cached.brazierPosition;
-                currentRoomBrazierMatchIndex = cached.brazierMatchIndex;
-            }
-            currentRoomCakeText = cached.cakeText;
-            currentRoomCakePos = cached.cakePosition;
-            if (scanGod) {
-                currentRoomGodAltars.addAll(cached.godAltars);
-            }
-            if (scanPylon) {
-                currentRoomPylons.addAll(cached.pylons);
-            }
-
-            boolean brazierSatisfied = !scanBrazier || (currentRoomBrazierModifiersText != null && currentRoomBrazierPos != null);
-            boolean cakeSatisfied = currentRoomCakeText == null || currentRoomCakePos != null;
-            boolean godSatisfied = !scanGod || currentRoomGodAltars.size() >= MAX_GOD_ALTARS_PER_ROOM;
-            boolean pylonSatisfied = !scanPylon || currentRoomPylons.size() >= MAX_PYLONS_PER_ROOM;
-            if (brazierSatisfied && cakeSatisfied && godSatisfied && pylonSatisfied) {
-                currentRoomSpecialScanDone = true;
-                roomSpecialScanProgressCache.remove(roomCoordinate);
-                return;
-            }
-        }
-
-        RoomSpecialScanProgressEntry progress = roomSpecialScanProgressCache.get(roomCoordinate);
-        if (progress != null
-                && progress.scanGodEnabled == scanGod
-                && progress.scanBrazierEnabled == scanBrazier
-                && progress.scanPylonEnabled == scanPylon
-                && progress.minY <= progress.maxY) {
-            currentRoomSpecialScanMinY = progress.minY;
-            currentRoomSpecialScanMaxY = progress.maxY;
-
-            int totalChecks = getRoomSpecialTotalChecks(currentRoomSpecialScanMinY, currentRoomSpecialScanMaxY);
-            if (totalChecks > 0) {
-                currentRoomSpecialScanCursor = Math.max(0, Math.min(progress.cursor, totalChecks - 1));
-            } else {
-                currentRoomSpecialScanCursor = 0;
-            }
-        } else {
-            int minBuildY = player.level.getMinBuildHeight();
-            int maxBuildY = player.level.getMaxBuildHeight() - 1;
-            currentRoomSpecialScanMinY = Math.max(minBuildY, playerY - ROOM_SPECIAL_SCAN_Y_RANGE);
-            currentRoomSpecialScanMaxY = Math.min(maxBuildY, playerY + ROOM_SPECIAL_SCAN_Y_RANGE);
-
-            if (currentRoomSpecialScanMinY > currentRoomSpecialScanMaxY) {
-                currentRoomSpecialScanMinY = minBuildY;
-                currentRoomSpecialScanMaxY = maxBuildY;
-            }
-
-            roomSpecialScanProgressCache.remove(roomCoordinate);
-        }
-    }
-
-    private static void storeRoomSpecialDetectionCache(CellCoordinate roomCoordinate, String brazierModifiers, BlockPos brazierPosition, Integer brazierMatchIndex, String cakeText, BlockPos cakePosition, List<RoomSpecialPoint> godAltars, List<RoomSpecialPoint> pylons) {
-        if (roomCoordinate == null) {
-            return;
-        }
-        roomSpecialDetectionCache.put(roomCoordinate, new RoomSpecialDetectionCacheEntry(brazierModifiers, brazierPosition, brazierMatchIndex, cakeText, cakePosition, godAltars, pylons));
-    }
-
-    private static boolean hasCurrentRoomSpecialData() {
-        return currentRoomBrazierModifiersText != null
-                || currentRoomBrazierPos != null
-                || currentRoomBrazierMatchIndex != null
-                || !currentRoomGodAltars.isEmpty()
-                || !currentRoomPylons.isEmpty();
-    }
-
-    private static void persistCurrentRoomSpecialDetections() {
-        if (currentRoomSpecialScanCoord == null || !hasCurrentRoomSpecialData()) {
-            return;
-        }
-
-        storeRoomSpecialDetectionCache(
-                currentRoomSpecialScanCoord,
-                currentRoomBrazierModifiersText,
-                currentRoomBrazierPos,
-                currentRoomBrazierMatchIndex,
-                currentRoomCakeText,
-                currentRoomCakePos,
-                currentRoomGodAltars,
-                currentRoomPylons
-        );
-    }
-
-    private static int getRoomSpecialTotalChecks(int minY, int maxY) {
-        int ySpan = maxY - minY + 1;
-        if (ySpan <= 0) {
-            return 0;
-        }
-        return 47 * 47 * ySpan;
-    }
-
-    private static void persistCurrentRoomSpecialScanProgress() {
-        if (currentRoomSpecialScanCoord == null) {
-            return;
-        }
-
-        int totalChecks = getRoomSpecialTotalChecks(currentRoomSpecialScanMinY, currentRoomSpecialScanMaxY);
-        if (totalChecks <= 0 || currentRoomSpecialScanDone || currentRoomSpecialScanCursor >= totalChecks) {
-            roomSpecialScanProgressCache.remove(currentRoomSpecialScanCoord);
-            return;
-        }
-
-        int clampedCursor = Math.max(0, Math.min(currentRoomSpecialScanCursor, totalChecks - 1));
-        roomSpecialScanProgressCache.put(
-                currentRoomSpecialScanCoord,
-                new RoomSpecialScanProgressEntry(
-                        currentRoomSpecialScanMinY,
-                        currentRoomSpecialScanMaxY,
-                        clampedCursor,
-                        currentRoomSpecialScanGodEnabled,
-                        currentRoomSpecialScanBrazierEnabled,
-                        currentRoomSpecialScanPylonEnabled
-                )
-        );
-    }
-
-    private static boolean shouldSkipSpecialRoomScan(CellCoordinate roomCoordinate) {
-        if (roomCoordinate == null) {
-            return false;
-        }
-
-        VaultCell roomCell = cellCache.get(roomCoordinate);
-        if (roomCell == null) {
-            return false;
-        }
-
-        if (roomCell.roomType == RoomType.ROOMTYPE_CHALLENGE
-                || roomCell.roomType == RoomType.ROOMTYPE_OMEGA
-                || roomCell.roomType == RoomType.ROOMTYPE_START) {
-            return true;
-        }
-
-        return roomCell.roomName != null && roomCell.roomName.toLowerCase().contains("boss");
-    }
-
-    private static boolean isFeatureScanEnabled(RoomSpecialFeatureDefinition featureDef) {
-        if (featureDef == null) {
-            return false;
-        }
-
-        return RoomSpecialScanToggleConfigManager.isEnabled(featureDef.id);
-    }
-
-    private static boolean isFeatureScanCompleted(RoomSpecialFeatureDefinition featureDef) {
-        if (featureDef == null || featureDef.id == null) {
-            return false;
-        }
-
-        if ("brazier".equals(featureDef.id)) {
-            return currentRoomBrazierModifiersText != null;
-        }
-        if ("god_altar".equals(featureDef.id)) {
-            int maxAltars = featureDef.maxPerRoom > 0 ? featureDef.maxPerRoom : MAX_GOD_ALTARS_PER_ROOM;
-            return currentRoomGodAltars.size() >= maxAltars;
-        }
-        if ("cake".equals(featureDef.id)) {
-            return currentRoomCakeText != null && currentRoomCakePos != null;
-        }
-        if ("pylon".equals(featureDef.id)) {
-            int maxPylons = featureDef.maxPerRoom > 0 ? featureDef.maxPerRoom : MAX_PYLONS_PER_ROOM;
-            return currentRoomPylons.size() >= maxPylons;
-        }
-
-        return false;
-    }
-
-    private static boolean isAllFeaturesScanCompleted(RoomSpecialDetectionConfig detectionConfig, boolean scanGod, boolean scanBrazier) {
-        if (detectionConfig != null && detectionConfig.getEnabledFeatures() != null) {
-            for (RoomSpecialFeatureDefinition featureDef : detectionConfig.getEnabledFeatures()) {
-                if (featureDef == null || !isFeatureScanEnabled(featureDef)) {
-                    continue;
-                }
-                if (!isFeatureScanCompleted(featureDef)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        boolean brazierDone = !scanBrazier || currentRoomBrazierModifiersText != null;
-        boolean godDone = !scanGod || currentRoomGodAltars.size() >= MAX_GOD_ALTARS_PER_ROOM;
-        return brazierDone && godDone;
-    }
-
-    private static void processDetectedFeature(RoomSpecialFeatureDefinition featureDef, BlockPos worldPos, CompoundTag nbt, BlockState blockState, Player player) {
-        if (featureDef == null || featureDef.id == null) {
-            return;
-        }
-
-        RoomSpecialFeatureDetector detector = FeatureDetectorRegistry.getDetectorForDefinition(featureDef);
-        if (detector == null) {
-            // Fallback: use old parsing methods for built-in features
-            if ("brazier".equals(featureDef.id)) {
-                processBrazierFeature(nbt, worldPos, player);
-            } else if ("god_altar".equals(featureDef.id)) {
-                processGodAltarFeature(nbt, blockState, worldPos, player);
-            }
-            return;
-        }
-
-        List<DetectedSpecialFeature> features = detector.detectFromNbt(featureDef, blockState, nbt, player);
-        for (DetectedSpecialFeature feature : features) {
-            if ("brazier".equals(feature.featureId)) {
-                currentRoomBrazierModifiersText = feature.displayText;
-                currentRoomBrazierPos = worldPos;
-                currentRoomBrazierMatchIndex = feature.matchIndex;
-                persistCurrentRoomSpecialDetections();
-                if (debug && !feature.displayText.equals(currentRoomBrazierAnnouncedText)) {
-                    player.sendMessage(new TextComponent("[VaultMapper Debug] Brazier modifiers: " + feature.displayText), player.getUUID());
-                    currentRoomBrazierAnnouncedText = feature.displayText;
-                }
-            } else if ("cake".equals(feature.featureId)) {
-                currentRoomCakeText = feature.displayText;
-                currentRoomCakePos = worldPos;
-                persistCurrentRoomSpecialDetections();
-                if (debug && !feature.displayText.equals(currentRoomCakeAnnouncedText)) {
-                    player.sendMessage(new TextComponent("[VaultMapper Debug] Cake: " + feature.displayText), player.getUUID());
-                    currentRoomCakeAnnouncedText = feature.displayText;
-                }
-            } else if ("pylon".equals(feature.featureId)) {
-                String pylonType = RoomSpecialNbtParser.extractPylonType(nbt);
-                upsertSpecialPoint(currentRoomPylons, MAX_PYLONS_PER_ROOM, worldPos, feature.displayText, pylonType);
-                persistCurrentRoomSpecialDetections();
-                String debugKey = feature.displayText + "@" + worldPos.getX() + "," + worldPos.getY() + "," + worldPos.getZ();
-                if (debug && !currentRoomPylonAnnouncedLines.contains(debugKey)) {
-                    player.sendMessage(new TextComponent("[VaultMapper Debug] Pylon: " + feature.displayText + (pylonType != null ? " (Type: " + pylonType + ")" : "")), player.getUUID());
-                    currentRoomPylonAnnouncedLines.add(debugKey);
-                }
-            } else if ("god_altar".equals(feature.featureId)) {
-                upsertGodAltarPoint(currentRoomGodAltars, worldPos, feature.displayText);
-                persistCurrentRoomSpecialDetections();
-                String debugKey = feature.displayText + "@" + worldPos.getX() + "," + worldPos.getY() + "," + worldPos.getZ();
-                if (debug && !currentRoomGodAltarAnnouncedLines.contains(debugKey)) {
-                    player.sendMessage(new TextComponent("[VaultMapper Debug] God Altar: " + feature.displayText), player.getUUID());
-                    currentRoomGodAltarAnnouncedLines.add(debugKey);
-                }
-            }
-        }
-    }
-
-    private static void processBrazierFeature(CompoundTag nbt, BlockPos worldPos, Player player) {
-        String modifiers = parseBrazierModifiers(nbt);
-        if (modifiers != null && !modifiers.isEmpty()) {
-            currentRoomBrazierModifiersText = modifiers;
-            currentRoomBrazierPos = worldPos;
-            currentRoomBrazierMatchIndex = findMatchingBrazierTargetIndex(nbt.getCompound("Modifiers"));
-            persistCurrentRoomSpecialDetections();
-            if (debug && !modifiers.equals(currentRoomBrazierAnnouncedText)) {
-                player.sendMessage(new TextComponent("[VaultMapper Debug] Brazier modifiers: " + modifiers), player.getUUID());
-                currentRoomBrazierAnnouncedText = modifiers;
-            }
-        }
-    }
-
-    private static void processGodAltarFeature(CompoundTag nbt, BlockState blockState, BlockPos worldPos, Player player) {
-        String godName = extractGodName(blockState, nbt);
-        String title = extractGodChallengeTitle(nbt);
-        String line = godName + ": " + title;
-        upsertGodAltarPoint(currentRoomGodAltars, worldPos, line);
-        persistCurrentRoomSpecialDetections();
-        String debugKey = line + "@" + worldPos.getX() + "," + worldPos.getY() + "," + worldPos.getZ();
-        if (debug && !currentRoomGodAltarAnnouncedLines.contains(debugKey)) {
-            player.sendMessage(new TextComponent("[VaultMapper Debug] God Altar: " + line), player.getUUID());
-            currentRoomGodAltarAnnouncedLines.add(debugKey);
-        }
-    }
-
-    private static void tickCurrentRoomSpecialScan(Player player, int roomX, int roomZ, CellType cellType) {
-        if (!enabled || player == null) {
-            persistCurrentRoomSpecialDetections();
-            persistCurrentRoomSpecialScanProgress();
-            clearCurrentRoomSpecialDetections();
-            return;
-        }
-
-        if (!VaultDimensionUtil.isInVaultNamespace(player)) {
-            persistCurrentRoomSpecialDetections();
-            persistCurrentRoomSpecialScanProgress();
-            clearCurrentRoomSpecialDetections();
-            return;
-        }
-
-        RoomSpecialDetectionConfig detectionConfig = RoomSpecialDetectionConfigManager.getActiveConfig();
-        boolean scanGod = detectionConfig != null && detectionConfig.getFeatureById("god_altar") != null && RoomSpecialScanToggleConfigManager.isEnabled("god_altar");
-        boolean scanBrazier = detectionConfig != null && detectionConfig.getFeatureById("brazier") != null && RoomSpecialScanToggleConfigManager.isEnabled("brazier");
-        boolean scanPylon = detectionConfig != null && detectionConfig.getFeatureById("pylon") != null && RoomSpecialScanToggleConfigManager.isEnabled("pylon");
-
-        boolean hasEnabledSpecialFeature = false;
-        if (detectionConfig != null) {
-            for (RoomSpecialFeatureDefinition featureDef : detectionConfig.getEnabledFeatures()) {
-                if (featureDef != null && isFeatureScanEnabled(featureDef)) {
-                    hasEnabledSpecialFeature = true;
-                    break;
-                }
-            }
-        }
-
-        if (!hasEnabledSpecialFeature) {
-            persistCurrentRoomSpecialDetections();
-            persistCurrentRoomSpecialScanProgress();
-            clearCurrentRoomSpecialDetections();
-            return;
-        }
-
-        if (cellType != CellType.CELLTYPE_ROOM) {
-            persistCurrentRoomSpecialDetections();
-            persistCurrentRoomSpecialScanProgress();
-            clearCurrentRoomSpecialDetections();
-            return;
-        }
-
-        CellCoordinate roomCoordinate = new CellCoordinate(roomX, roomZ);
-        if (shouldSkipSpecialRoomScan(roomCoordinate)) {
-            persistCurrentRoomSpecialDetections();
-            persistCurrentRoomSpecialScanProgress();
-            clearCurrentRoomSpecialDetections();
-            return;
-        }
-
-        if (currentRoomSpecialScanCoord == null
-                || currentRoomSpecialScanCoord.x() != roomCoordinate.x()
-                || currentRoomSpecialScanCoord.z() != roomCoordinate.z()
-                || currentRoomSpecialScanGodEnabled != scanGod
-                || currentRoomSpecialScanBrazierEnabled != scanBrazier
-                || currentRoomSpecialScanPylonEnabled != scanPylon) {
-            startCurrentRoomSpecialScan(roomCoordinate, (int) Math.floor(player.getY()), player, scanGod, scanBrazier, scanPylon);
-        }
-
-        if (currentRoomSpecialScanDone || currentRoomSpecialScanCoord == null) {
-            return;
-        }
-
-        int ySpan = currentRoomSpecialScanMaxY - currentRoomSpecialScanMinY + 1;
-        int totalChecks = getRoomSpecialTotalChecks(currentRoomSpecialScanMinY, currentRoomSpecialScanMaxY);
-        int checks = 0;
-
-        while (checks < ROOM_SPECIAL_SCAN_BUDGET_PER_TICK && currentRoomSpecialScanCursor < totalChecks) {
-            int index = currentRoomSpecialScanCursor++;
-            checks++;
-
-            int xStride = 47 * ySpan;
-            int relX = index / xStride;
-            int rem = index % xStride;
-            int relZ = rem / ySpan;
-            int y = currentRoomSpecialScanMinY + (rem % ySpan);
-
-            Block block = getCellBlock(currentRoomSpecialScanCoord.x(), currentRoomSpecialScanCoord.z(), relX, y, relZ);
-            if (block == null || block.getRegistryName() == null) {
-                continue;
-            }
-
-            String blockId = block.getRegistryName().toString();
-            int worldX = currentRoomSpecialScanCoord.x() * 47 + relX;
-            int worldZ = currentRoomSpecialScanCoord.z() * 47 + relZ;
-            BlockPos worldPos = new BlockPos(worldX, y, worldZ);
-
-            // Check against configured features
-            if (detectionConfig != null) {
-                for (RoomSpecialFeatureDefinition featureDef : detectionConfig.getEnabledFeatures()) {
-                    if (featureDef == null || !blockId.equals(featureDef.blockId)) {
-                        continue;
-                    }
-
-                    // Check if this feature should be scanned based on client config
-                    if (!isFeatureScanEnabled(featureDef)) {
-                        continue;
-                    }
-
-                    // Skip if we already have enough detections of this feature
-                    if (isFeatureScanCompleted(featureDef)) {
-                        continue;
-                    }
-
-                    BlockState blockState = player.level.getBlockState(worldPos);
-                    BlockEntity blockEntity = player.level.getBlockEntity(worldPos);
-                    CompoundTag nbt = blockEntity != null ? blockEntity.serializeNBT() : null;
-                    processDetectedFeature(featureDef, worldPos, nbt, blockState, player);
-                }
-            }
-
-            // Check if all features are done
-                    if (isAllFeaturesScanCompleted(detectionConfig, scanGod, scanBrazier)) {
-                currentRoomSpecialScanDone = true;
-                break;
-            }
-        }
-
-        if (currentRoomSpecialScanCursor >= totalChecks) {
-            currentRoomSpecialScanDone = true;
-        }
-
-        if (currentRoomSpecialScanDone) {
-            persistCurrentRoomSpecialDetections();
-            roomSpecialScanProgressCache.remove(currentRoomSpecialScanCoord);
-        } else {
-            persistCurrentRoomSpecialScanProgress();
-        }
+        return RoomSpecialFeatureCoordinator.getCurrentRoomGodAltarOverlayLines();
     }
 
     private static Direction detectStartPortalSide() {
@@ -2059,7 +1264,7 @@ public class VaultMap {
                 int playerRoomX = (int) Math.floor(player.getX() / 47);
                 int playerRoomZ = (int) Math.floor(player.getZ() / 47);
                 CellType currentCellType = getCellType(playerRoomX, playerRoomZ);
-                tickCurrentRoomSpecialScan(player, playerRoomX, playerRoomZ, currentCellType);
+                RoomSpecialFeatureCoordinator.tickCurrentRoomSpecialScan(player, playerRoomX, playerRoomZ, currentCellType);
             }
 
             clientTickCount++;
