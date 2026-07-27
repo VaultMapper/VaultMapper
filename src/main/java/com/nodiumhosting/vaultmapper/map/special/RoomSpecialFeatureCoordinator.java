@@ -61,8 +61,32 @@ public class RoomSpecialFeatureCoordinator {
         return getVerticalRelationKey(currentRoomBrazierPos, playerY) + "|" + currentRoomBrazierModifiersText;
     }
 
+    public static BlockPos getCurrentRoomBrazierPosition() {
+        return currentRoomBrazierPos;
+    }
+
     public static BlockPos getCurrentRoomCakePosition() {
         return currentRoomCakePos;
+    }
+
+    public static List<BlockPos> getCurrentRoomGodAltarPositions() {
+        ArrayList<BlockPos> positions = new ArrayList<>();
+        for (RoomSpecialPoint point : currentRoomGodAltars) {
+            if (point != null && point.position != null) {
+                positions.add(point.position);
+            }
+        }
+        return positions;
+    }
+
+    public static List<BlockPos> getCurrentRoomPylonPositions() {
+        ArrayList<BlockPos> positions = new ArrayList<>();
+        for (RoomSpecialPoint point : currentRoomPylons) {
+            if (point != null && point.position != null) {
+                positions.add(point.position);
+            }
+        }
+        return positions;
     }
 
     public static String getCurrentRoomCakeOverlayText() {

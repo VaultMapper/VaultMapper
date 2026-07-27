@@ -614,8 +614,20 @@ public class VaultMap {
         return RoomSpecialFeatureCoordinator.getCurrentRoomBrazierOverlayText();
     }
 
+    public static BlockPos getCurrentRoomBrazierPosition() {
+        return RoomSpecialFeatureCoordinator.getCurrentRoomBrazierPosition();
+    }
+
     public static BlockPos getCurrentRoomCakePosition() {
         return RoomSpecialFeatureCoordinator.getCurrentRoomCakePosition();
+    }
+
+    public static List<BlockPos> getCurrentRoomGodAltarPositions() {
+        return RoomSpecialFeatureCoordinator.getCurrentRoomGodAltarPositions();
+    }
+
+    public static List<BlockPos> getCurrentRoomPylonPositions() {
+        return RoomSpecialFeatureCoordinator.getCurrentRoomPylonPositions();
     }
 
     public static String getCurrentRoomCakeOverlayText() {

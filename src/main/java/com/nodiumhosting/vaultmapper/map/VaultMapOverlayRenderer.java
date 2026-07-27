@@ -106,6 +106,19 @@ public class VaultMapOverlayRenderer {
             BearingIndicatorRenderer.render(event.getMatrixStack(), "Cake", cakePos);
         }
 
+        BlockPos brazierPos = VaultMap.getCurrentRoomBrazierPosition();
+        if (brazierPos != null) {
+            BearingIndicatorRenderer.render(event.getMatrixStack(), "Brazier", brazierPos);
+        }
+
+        for (BlockPos pos : VaultMap.getCurrentRoomGodAltarPositions()) {
+            BearingIndicatorRenderer.render(event.getMatrixStack(), "God Altar", pos);
+        }
+
+        for (BlockPos pos : VaultMap.getCurrentRoomPylonPositions()) {
+            BearingIndicatorRenderer.render(event.getMatrixStack(), "Pylon", pos);
+        }
+
         if (ClientConfig.SHOW_SPECIAL_TEXT.get()) {
             ArrayList<String> specialLines = new ArrayList<>();
         String brazierOverlayLine = VaultMap.getCurrentRoomBrazierOverlayText();
