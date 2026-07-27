@@ -7,11 +7,25 @@ public class ClientConfig {
     public static final ForgeConfigSpec SPEC;
 
     public static final ForgeConfigSpec.ConfigValue<Boolean> MAP_ENABLED;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_ROOM_TILE;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_SPECIAL_TEXT;
 
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_X_OFFSET;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_Y_OFFSET;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_X_ANCHOR;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_Y_ANCHOR;
+
+    public static final ForgeConfigSpec.ConfigValue<Integer> ROOM_TILE_X_OFFSET;
+    public static final ForgeConfigSpec.ConfigValue<Integer> ROOM_TILE_Y_OFFSET;
+    public static final ForgeConfigSpec.ConfigValue<Integer> ROOM_TILE_X_ANCHOR;
+    public static final ForgeConfigSpec.ConfigValue<Integer> ROOM_TILE_Y_ANCHOR;
+    public static final ForgeConfigSpec.ConfigValue<Integer> ROOM_TILE_SCALE;
+
+    public static final ForgeConfigSpec.ConfigValue<Integer> SPECIAL_TEXT_X_OFFSET;
+    public static final ForgeConfigSpec.ConfigValue<Integer> SPECIAL_TEXT_Y_OFFSET;
+    public static final ForgeConfigSpec.ConfigValue<Integer> SPECIAL_TEXT_X_ANCHOR;
+    public static final ForgeConfigSpec.ConfigValue<Integer> SPECIAL_TEXT_Y_ANCHOR;
+    public static final ForgeConfigSpec.ConfigValue<Integer> SPECIAL_TEXT_SCALE;
     public static final ForgeConfigSpec.ConfigValue<String> POINTER_COLOR;
     public static final ForgeConfigSpec.ConfigValue<String> ROOM_COLOR;
     public static final ForgeConfigSpec.ConfigValue<String> START_ROOM_COLOR;
@@ -48,12 +62,26 @@ public class ClientConfig {
         BUILDER.push("VaultMapper Client Config");
 
         MAP_ENABLED = BUILDER.comment("Enable rendering the map").define("MAP_ENABLED", true);
+        SHOW_ROOM_TILE = BUILDER.comment("Show the single-room tile overlay").define("SHOW_ROOM_TILE", true);
+        SHOW_SPECIAL_TEXT = BUILDER.comment("Show special feature text overlay (brazier/cake/altar/pylon)").define("SHOW_SPECIAL_TEXT", true);
 
         MAP_X_OFFSET = BUILDER.comment("Offset the Map from the default position (bottom right) on the x-axis").define("MAP_X_OFFSET", 0);
         MAP_Y_OFFSET = BUILDER.comment("Offset the Map from the default position (bottom right) on the y-axis").define("Map_Y_OFFSET", 0);
 
         MAP_X_ANCHOR = BUILDER.comment("Anchor the Map on the x-axis (0-left, 2-center, 4-right)").define("MAP_X_ANCHOR", 4);
         MAP_Y_ANCHOR = BUILDER.comment("Anchor the Map on the y-axis (0-top, 2-center, 4-bottom)").define("MAP_Y_ANCHOR", 4);
+
+        ROOM_TILE_X_OFFSET = BUILDER.comment("Offset the Room Tile from its anchor on the x-axis").define("ROOM_TILE_X_OFFSET", 0);
+        ROOM_TILE_Y_OFFSET = BUILDER.comment("Offset the Room Tile from its anchor on the y-axis").define("ROOM_TILE_Y_OFFSET", 0);
+        ROOM_TILE_X_ANCHOR = BUILDER.comment("Anchor the Room Tile on the x-axis (0-left, 2-center, 4-right)").define("ROOM_TILE_X_ANCHOR", 2);
+        ROOM_TILE_Y_ANCHOR = BUILDER.comment("Anchor the Room Tile on the y-axis (0-top, 2-center, 4-bottom)").define("ROOM_TILE_Y_ANCHOR", 2);
+        ROOM_TILE_SCALE = BUILDER.comment("Scale of the room tile, 3 to 30").define("ROOM_TILE_SCALE", 15);
+
+        SPECIAL_TEXT_X_OFFSET = BUILDER.comment("Offset the Special Feature text from its anchor on the x-axis").define("SPECIAL_TEXT_X_OFFSET", 0);
+        SPECIAL_TEXT_Y_OFFSET = BUILDER.comment("Offset the Special Feature text from its anchor on the y-axis").define("SPECIAL_TEXT_Y_OFFSET", 0);
+        SPECIAL_TEXT_X_ANCHOR = BUILDER.comment("Anchor the Special Feature text on the x-axis (0-left, 2-center, 4-right)").define("SPECIAL_TEXT_X_ANCHOR", 2);
+        SPECIAL_TEXT_Y_ANCHOR = BUILDER.comment("Anchor the Special Feature text on the y-axis (0-top, 2-center, 4-bottom)").define("SPECIAL_TEXT_Y_ANCHOR", 4);
+        SPECIAL_TEXT_SCALE = BUILDER.comment("Scale of the special feature text, 3 to 30").define("SPECIAL_TEXT_SCALE", 10);
 
         MAP_SCALE = BUILDER.comment("Scale of the map, 3 to 30").define("MAP_SCALE", 10);
         ARROW_SCALE = BUILDER.comment("Scale of the arrow, 3 to 30").define("ARROW_SCALE", 10);
