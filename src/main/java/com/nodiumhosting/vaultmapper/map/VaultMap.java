@@ -614,6 +614,10 @@ public class VaultMap {
         return RoomSpecialFeatureCoordinator.getCurrentRoomBrazierOverlayText();
     }
 
+    public static BlockPos getCurrentRoomCakePosition() {
+        return RoomSpecialFeatureCoordinator.getCurrentRoomCakePosition();
+    }
+
     public static String getCurrentRoomCakeOverlayText() {
         return RoomSpecialFeatureCoordinator.getCurrentRoomCakeOverlayText();
     }

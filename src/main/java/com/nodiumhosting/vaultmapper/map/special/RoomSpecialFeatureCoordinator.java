@@ -61,6 +61,10 @@ public class RoomSpecialFeatureCoordinator {
         return getVerticalRelationKey(currentRoomBrazierPos, playerY) + "|" + currentRoomBrazierModifiersText;
     }
 
+    public static BlockPos getCurrentRoomCakePosition() {
+        return currentRoomCakePos;
+    }
+
     public static String getCurrentRoomCakeOverlayText() {
         if (currentRoomCakeText == null || currentRoomCakePos == null) {
             return null;

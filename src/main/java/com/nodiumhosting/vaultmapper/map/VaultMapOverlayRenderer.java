@@ -11,8 +11,10 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.config.RoomSpecialScanToggleConfigManager;
+import com.nodiumhosting.vaultmapper.map.special.BearingIndicatorRenderer;
 import com.nodiumhosting.vaultmapper.map.special.RoomSpecialTextRenderer;
 import com.nodiumhosting.vaultmapper.map.special.VaultRoomTileRenderer;
+import net.minecraft.core.BlockPos;
 import com.nodiumhosting.vaultmapper.proto.CellType;
 import com.nodiumhosting.vaultmapper.proto.RoomType;
 import com.nodiumhosting.vaultmapper.util.ColorUtil;
@@ -98,6 +100,11 @@ public class VaultMapOverlayRenderer {
         }
 
         VaultRoomTileRenderer.render(event.getMatrixStack());
+
+        BlockPos cakePos = VaultMap.getCurrentRoomCakePosition();
+        if (cakePos != null) {
+            BearingIndicatorRenderer.render(event.getMatrixStack(), "Cake", cakePos);
+        }
 
         if (ClientConfig.SHOW_SPECIAL_TEXT.get()) {
             ArrayList<String> specialLines = new ArrayList<>();
