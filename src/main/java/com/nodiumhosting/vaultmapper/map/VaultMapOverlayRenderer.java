@@ -12,6 +12,7 @@ import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.config.RoomSpecialScanToggleConfigManager;
 import com.nodiumhosting.vaultmapper.map.special.RoomSpecialTextRenderer;
+import com.nodiumhosting.vaultmapper.map.special.VaultRoomTileRenderer;
 import com.nodiumhosting.vaultmapper.proto.CellType;
 import com.nodiumhosting.vaultmapper.proto.RoomType;
 import com.nodiumhosting.vaultmapper.util.ColorUtil;
@@ -95,6 +96,8 @@ public class VaultMapOverlayRenderer {
             TextComponent syncError = new TextComponent("Viewer Code: " + VaultMap.viewerCode);
             GuiComponent.drawCenteredString(event.getMatrixStack(), Minecraft.getInstance().font, syncError, (int) centerX + offsetX, (int) mapAnchorZ + offsetZ + (int) offset, 0xFFFFFF);
         }
+
+        VaultRoomTileRenderer.render(event.getMatrixStack());
 
         if (ClientConfig.SHOW_SPECIAL_TEXT.get()) {
             ArrayList<String> specialLines = new ArrayList<>();

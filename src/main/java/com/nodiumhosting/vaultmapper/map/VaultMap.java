@@ -606,6 +606,10 @@ public class VaultMap {
         return detected;
     }
 
+    public static VaultCell getCurrentRoom() {
+        return currentRoom;
+    }
+
     public static String getCurrentRoomBrazierOverlayText() {
         return RoomSpecialFeatureCoordinator.getCurrentRoomBrazierOverlayText();
     }
