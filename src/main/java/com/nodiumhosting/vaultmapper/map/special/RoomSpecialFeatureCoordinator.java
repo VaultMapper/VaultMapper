@@ -470,6 +470,7 @@ public class RoomSpecialFeatureCoordinator {
         }
         List<DetectedSpecialFeature> features = detector.detectFromNbt(featureDef, blockState, nbt, player);
         for (DetectedSpecialFeature feature : features) {
+            feature.position = worldPos;
             if ("brazier".equals(feature.featureId)) {
                 currentRoomBrazierModifiersText = feature.displayText;
                 currentRoomBrazierPos = worldPos;

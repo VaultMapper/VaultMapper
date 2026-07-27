@@ -225,6 +225,7 @@ _(Append one entry per work session/PR. Do not edit past entries — add new one
 | 2026-07-27 | Claude (Sonnet) | Initial creation of this SSOT/requirements document from repo analysis.                    | (docs only)   | N/A — baseline           |
 | 2026-07-27 | Gemini (Agent)  | Injected strict AI workflow constraints, branch rules, and BDD task tracking requirements. | (docs only)   | Agent Workflow Update    |
 | 2026-07-27 | Claude (Agent)  | STORY-0: Extract RoomSpecialFeatureCoordinator from VaultMap.java. Moved all special-feature state, inner classes, scan/processing/cache/persistence/query methods into new `map/special/` classes. VaultMap.java reduced from 2327->1534 lines. | `VaultMap.java`, `RoomSpecialFeatureCoordinator.java`, `RoomSpecialPoint.java`, `RoomSpecialDetectionCacheEntry.java`, `RoomSpecialScanProgressEntry.java` | §7.1 (decomposition) |
+| 2026-07-27 | Claude (Agent)  | STORY-1: Remove dead code. Removed commented-out IGNORE_RESEARCH_REQUIREMENT config, dead debug/log comments across touched files. | `ClientConfig.java`, `VaultMap.java`, `VaultMapOverlayRenderer.java`, `VaultMapperConfigScreen.java` | §7.4 (dead code) |
 
 ## 11. Agent Decision Log
 
