@@ -96,7 +96,8 @@ public class VaultMapOverlayRenderer {
             GuiComponent.drawCenteredString(event.getMatrixStack(), Minecraft.getInstance().font, syncError, (int) centerX + offsetX, (int) mapAnchorZ + offsetZ + (int) offset, 0xFFFFFF);
         }
 
-        ArrayList<String> specialLines = new ArrayList<>();
+        if (ClientConfig.SHOW_SPECIAL_TEXT.get()) {
+            ArrayList<String> specialLines = new ArrayList<>();
         String brazierOverlayLine = VaultMap.getCurrentRoomBrazierOverlayText();
         if (brazierOverlayLine != null && !brazierOverlayLine.isEmpty()) {
             specialLines.add("BRAZIER|" + brazierOverlayLine);
@@ -149,6 +150,7 @@ public class VaultMapOverlayRenderer {
                 lineY += scaledLineHeight;
                 previousType = currentType;
             }
+        }
         }
 
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
