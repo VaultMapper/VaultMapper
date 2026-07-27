@@ -206,8 +206,6 @@ public class VaultMapOverlayRenderer {
                     RenderSystem.setShaderTexture(0, icon);
                     bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-                    //Gui.blit(event.getMatrixStack(), (int) (centerX + cell.x * mapRoomWidth + offsetX), (int) (centerZ + cell.z * mapRoomWidth + offsetZ), 0, 0, (int) mapRoomWidth, (int) mapRoomWidth, 16, 16);
-                    //VaultMapper.LOGGER.info(String.valueOf(mapRoomWidth));
                     renderTextureCell(bufferBuilder, vaultCell);
                 } catch (Exception e) {
                     VaultMapper.LOGGER.error("Failed to render icon for room: " + vaultCell.roomName);

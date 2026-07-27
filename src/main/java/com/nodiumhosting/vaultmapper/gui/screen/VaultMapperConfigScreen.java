@@ -39,7 +39,6 @@ public class VaultMapperConfigScreen extends Screen {
         super(new TextComponent("Vault Mapper Config"));
     }
 
-    // copied block from overlay renderer, should move elsewhere
     private static int parseColor(String hexColor) {
         return ColorUtil.parseHexColor(hexColor);
     }
@@ -481,8 +480,6 @@ public class VaultMapperConfigScreen extends Screen {
         });
         this.addRenderableWidget(resetButton);
 
-        //DEBUG
-//        this.addRenderableOnly(new MapComponent(0, 0, 384, 384, VaultMap.getCells()));
     }
 
     @Override

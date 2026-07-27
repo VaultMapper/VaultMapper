@@ -30,7 +30,6 @@ public class ClientConfig {
     public static final ForgeConfigSpec.ConfigValue<Boolean> SCAN_CURRENT_ROOM_GOD_ALTARS;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SCAN_CURRENT_ROOM_BRAZIER;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAX_MAPS_SAVED;
-    //    public static final ForgeConfigSpec.ConfigValue<Boolean> IGNORE_RESEARCH_REQUIREMENT;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_SCALE;
     public static final ForgeConfigSpec.ConfigValue<Integer> ARROW_SCALE;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SYNC_ENABLED;
@@ -81,10 +80,6 @@ public class ClientConfig {
                 "Favorites will be saved forever regardless of this number.\n" +
                 "This number is a global number, not per world/server.\n" +
                 "Inputting a negative number disables the cap").define("MAX_MAPS_SAVED", -1);
-
-//        IGNORE_RESEARCH_REQUIREMENT = BUILDER.comment("Option to ignore the Vault Compass research requirement for Vault Map.\n" +
-//                        "Please don't abuse this option on servers where you don't have permission to do so.")
-//                .define("IGNORE_RESEARCH_REQUIREMENT", false);
 
         SYNC_ENABLED = BUILDER.comment("Enable syncing the map data between players").define("SYNC_ENABLED", true);
 

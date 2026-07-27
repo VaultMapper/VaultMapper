@@ -63,7 +63,7 @@ public class VaultMap {
     public static CopyOnWriteArrayList<VaultCell> cells = new CopyOnWriteArrayList<>();
     public static ConcurrentHashMap<CellCoordinate, VaultCell> cellCache = new ConcurrentHashMap<>();
     static VaultCell startRoom = new VaultCell(0, 0, CellType.CELLTYPE_ROOM, RoomType.ROOMTYPE_START);
-    static VaultCell currentRoom; // might not be needed
+    static VaultCell currentRoom;
     static VaultCell currentHighlightedRoom;
     static int defaultMapSize = 10; // map size in cells
     static int northSize = defaultMapSize;
@@ -1434,12 +1434,6 @@ public class VaultMap {
             BlockEntity hologramBlock = Objects.requireNonNull(Objects.requireNonNull(Minecraft.getInstance().player).getLevel()).getBlockEntity(hologramBlockPos);
             CompoundTag hologramData = Objects.requireNonNull(hologramBlock).serializeNBT();
 
-//            if (debug) {
-//                Minecraft.getInstance().player.sendMessage(new TextComponent("Hologram block: " + hologramData), UUID.randomUUID());
-//            }
-
-            // vaultDirection = direction;
-
             hologramNbt = hologramData;
         }
 
@@ -1491,7 +1485,6 @@ public class VaultMap {
 
         int xCoord = cellX * 47 + blockX;
         int zCoord = cellZ * 47 + blockZ;
-        //VaultMapper.LOGGER.info("X " + xCoord + " Z " + zCoord);
 
         if (!player.level.isLoaded(new BlockPos(xCoord, blockY, zCoord))) return null;
 
