@@ -1,9 +1,9 @@
 package com.nodiumhosting.vaultmapper.events;
 
-import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.map.VaultMap;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
 import com.nodiumhosting.vaultmapper.map.snapshots.MapCache;
+import com.nodiumhosting.vaultmapper.util.VaultDimensionUtil;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -16,7 +16,7 @@ public class NetworkEvent {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public static void loginHandler(ClientPlayerNetworkEvent.LoggedInEvent event) {
-        if (event.getPlayer().level.dimension().location().getNamespace().equals("the_vault") && VaultMapper.isVaultDimension(event.getPlayer().level.dimension().location().getPath())) {
+        if (VaultDimensionUtil.isInVaultDimension(event.getPlayer())) {
             MapCache.readCache();
             VaultMap.startSync(event.getPlayer().getUUID().toString(), event.getPlayer().level.dimension().location().getPath());
             VaultMap.enabled = true;

@@ -21,9 +21,14 @@ public class ClientConfig {
     public static final ForgeConfigSpec.ConfigValue<String> CHALLENGE_ROOM_COLOR;
     public static final ForgeConfigSpec.ConfigValue<String> ORE_ROOM_COLOR;
     public static final ForgeConfigSpec.ConfigValue<String> RESOURCE_ROOM_COLOR;
+    public static final ForgeConfigSpec.ConfigValue<String> IDENTIFIED_UNDISCOVERED_ROOM_COLOR;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_INSCRIPTIONS;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_ROOM_ICONS;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_TUNNELS;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SCAN_LOADED_ROOMS;
+    public static final ForgeConfigSpec.ConfigValue<Integer> IDENTIFICATION_EXTRA_CELL_RADIUS;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SCAN_CURRENT_ROOM_GOD_ALTARS;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SCAN_CURRENT_ROOM_BRAZIER;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAX_MAPS_SAVED;
     //    public static final ForgeConfigSpec.ConfigValue<Boolean> IGNORE_RESEARCH_REQUIREMENT;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_SCALE;
@@ -38,6 +43,7 @@ public class ClientConfig {
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAYER_CENTRIC_RENDERING;
 
     public static final ForgeConfigSpec.ConfigValue<Integer> ICON_CROP;
+    public static final ForgeConfigSpec.ConfigValue<Integer> IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE;
 
     static {
         BUILDER.push("VaultMapper Client Config");
@@ -62,9 +68,14 @@ public class ClientConfig {
         CHALLENGE_ROOM_COLOR = BUILDER.comment("Color for an explored Challenge Room").define("CHALLENGE_ROOM_COLOR", "#F09E00");
         ORE_ROOM_COLOR = BUILDER.comment("Color for an explored Ore Room").define("ORE_ROOM_COLOR", "#00FFFF");
         RESOURCE_ROOM_COLOR = BUILDER.comment("Color for an explored Resource Room").define("RESOURCE_ROOM_COLOR", "#FFFFFF");
+        IDENTIFIED_UNDISCOVERED_ROOM_COLOR = BUILDER.comment("Color for identified but undiscovered normal rooms").define("IDENTIFIED_UNDISCOVERED_ROOM_COLOR", "#7A8896");
         SHOW_INSCRIPTIONS = BUILDER.comment("Show Inscripted Rooms on the Map").define("SHOW_INSCRIPTIONS", true);
         SHOW_ROOM_ICONS = BUILDER.comment("Show Room Icons on the Map").define("SHOW_ROOM_ICONS", true);
         SHOW_TUNNELS = BUILDER.comment("Show Tunnels on the Map").define("SHOW_TUNNELS", true);
+        SCAN_LOADED_ROOMS = BUILDER.comment("Scan loaded rooms around the player and render them on the map").define("SCAN_LOADED_ROOMS", false);
+        IDENTIFICATION_EXTRA_CELL_RADIUS = BUILDER.comment("Extra room radius to scan while identifying loaded rooms").defineInRange("IDENTIFICATION_EXTRA_CELL_RADIUS", 1, 0, 8);
+        SCAN_CURRENT_ROOM_GOD_ALTARS = BUILDER.comment("Scan current room for God Altars and show god challenges around map").define("SCAN_CURRENT_ROOM_GOD_ALTARS", false);
+        SCAN_CURRENT_ROOM_BRAZIER = BUILDER.comment("Scan current room for Brazier Monolith and show modifiers around map").define("SCAN_CURRENT_ROOM_BRAZIER", false);
 
         MAX_MAPS_SAVED = BUILDER.comment("The maximum amount of map history snapshots that can be saved on file.\n" +
                 "Favorites will be saved forever regardless of this number.\n" +
@@ -88,6 +99,7 @@ public class ClientConfig {
         PLAYER_CENTRIC_RENDERING = BUILDER.comment("Enable player centric rendering. Also greatly reduces lag(hopefully)").define("PLAYER_CENTRIC_RENDERING", false);
 
         ICON_CROP = BUILDER.comment("Number of pixels cropped from icon from each side").defineInRange("ICON_CROP", 0, 0, 8);
+        IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE = BUILDER.comment("Icon scale for identified but undiscovered omega/challenge/boss rooms in percent").defineInRange("IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE", 60, 30, 100);
 
         BUILDER.pop();
         SPEC = BUILDER.build();

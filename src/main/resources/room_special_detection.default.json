@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "features": [
+    {
+      "id": "brazier",
+      "blockId": "the_vault:monolith",
+      "displayName": "Brazier Modifiers",
+      "matchingStrategy": "exact_or_subset",
+      "parsingRules": {
+        "type": "brazier_modifiers",
+        "nbtPath": "Modifiers"
+      },
+      "maxPerRoom": 1,
+      "minScanYRange": 0,
+      "caching": {
+        "enabled": true,
+        "ttl": -1
+      }
+    },
+    {
+      "id": "god_altar",
+      "blockId": "the_vault:god_altar",
+      "displayName": "God Altars",
+      "matchingStrategy": "none",
+      "parsingRules": {
+        "type": "god_altar",
+        "godName": "modifierCompletionPool",
+        "challengeTitle": "taskPool.renderer.title"
+      },
+      "maxPerRoom": 2,
+      "minScanYRange": 0,
+      "caching": {
+        "enabled": true,
+        "ttl": -1
+      }
+    },
+    {
+      "id": "cake",
+      "blockId": "the_vault:cake",
+      "displayName": "Cake",
+      "matchingStrategy": "none",
+      "parsingRules": {
+        "type": "block_presence"
+      },
+      "maxPerRoom": 1,
+      "minScanYRange": 0,
+      "caching": {
+        "enabled": true,
+        "ttl": -1
+      }
+    },
+    {
+      "id": "pylon",
+      "blockId": "the_vault:pylon",
+      "displayName": "Pylons",
+      "matchingStrategy": "none",
+      "parsingRules": {
+        "type": "pylon",
+        "description": "Config.description"
+      },
+      "maxPerRoom": 3,
+      "minScanYRange": 0,
+      "caching": {
+        "enabled": true,
+        "ttl": -1
+      }
+    }
+  ]
+}

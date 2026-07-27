@@ -1,0 +1,31 @@
+{
+  "the_vault:brazier_new": [
+    [
+      "the_vault:abundant_souls",
+      "the_vault:bronze_nuke",
+      "the_vault:champion_paradox",
+      "the_vault:dungeon_doors",
+      "the_vault:fuller_chests",
+      "the_vault:incredible_chests",
+      "the_vault:luckier_chests",
+      "the_vault:more_experience",
+      "the_vault:more_souls",
+      "the_vault:opulent_ores",
+      "the_vault:richer_ores",
+      "the_vault:treasure_doors",
+      "the_vault:vendoor_doors"
+    ],
+    [
+      "the_vault:brutal_mobs",
+      "the_vault:ethereal_mobs",
+      "the_vault:faster_mobs",
+      "the_vault:grievous_wounds",
+      "the_vault:harder_mobs",
+      "the_vault:injured_percent",
+      "the_vault:more_mobs",
+      "the_vault:more_mobs",
+      "the_vault:more_traps",
+      "the_vault:weakened_powers"
+    ]
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "generatedFrom": "vault_rooms.json",
+  "rooms": [
+    {
+      "key": "challenge_dragon",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/dragon",
+        "the_vault:vault/rooms/challenge/dragon1"
+      ],
+      "signatures": [
+        {
+          "blockId": "the_vault:dragon_room_controller",
+          "possiblePositions": [{ "x": 23, "y": 16, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_memory",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/memory",
+        "the_vault:vault/rooms/challenge/memory1"
+      ],
+      "signatures": [
+        {
+          "blockId": "the_vault:memory_room_controller",
+          "possiblePositions": [{ "x": 23, "y": 29, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_raid",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/raid",
+        "the_vault:vault/rooms/challenge/raid1",
+        "the_vault:vault/rooms/challenge/raid/rooms"
+      ],
+      "signatures": [
+        {
+          "blockId": "the_vault:raid_controller",
+          "possiblePositions": [{ "x": 23, "y": 29, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_x_mark",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/x-mark",
+        "the_vault:vault/rooms/challenge/x-mark1"
+      ],
+      "signatures": [
+        {
+          "blockId": "the_vault:x_mark_controller",
+          "possiblePositions": [{ "x": 23, "y": 14, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_laboratory",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/laboratory",
+        "the_vault:vault/rooms/challenge/laboratory1",
+        "the_vault:vault/rooms/challenge/laboratory2",
+        "the_vault:vault/rooms/challenge/laboratory3",
+
+        "the_vault:vault/rooms/challenge/laboratory4"
+      ],
+      "signatures": [
+        {
+          "blockId": "the_vault:elite_controller",
+          "possiblePositions": [{ "x": 23, "y": 29, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_factory",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": ["the_vault:vault/rooms/challenge/factory"],
+      "signatures": [
+        {
+          "blockId": "the_vault:vault_glass",
+          "possiblePositions": [{ "x": 23, "y": 28, "z": 23 }]
+        },
+        {
+          "blockId": "simplylight:illuminant_block_on",
+          "possiblePositions": [{ "x": 23, "y": 43, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_village_ornate",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/village",
+        "the_vault:vault/rooms/challenge/village1",
+        "the_vault:vault/rooms/challenge/village2",
+        "the_vault:vault/rooms/challenge/village3",
+        "the_vault:vault/rooms/challenge/village4"
+      ],
+      "signatures": [
+        {
+          "blockId": "minecraft:light_blue_terracotta",
+          "possiblePositions": [{ "x": 23, "y": 55, "z": 23 }]
+        },
+        {
+          "blockId": "auxiliaryblocks:light_blue_frameless_glass",
+          "possiblePositions": [{ "x": 23, "y": 54, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_village_gilded",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/village",
+        "the_vault:vault/rooms/challenge/village1",
+        "the_vault:vault/rooms/challenge/village2",
+        "the_vault:vault/rooms/challenge/village3",
+        "the_vault:vault/rooms/challenge/village4"
+      ],
+      "signatures": [
+        {
+          "blockId": "minecraft:black_concrete",
+          "possiblePositions": [{ "x": 23, "y": 55, "z": 23 }]
+        },
+        {
+          "blockId": "auxiliaryblocks:purple_frameless_glass",
+          "possiblePositions": [{ "x": 23, "y": 54, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_village_living",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/challenge/village",
+        "the_vault:vault/rooms/challenge/village1",
+        "the_vault:vault/rooms/challenge/village2",
+        "the_vault:vault/rooms/challenge/village3",
+        "the_vault:vault/rooms/challenge/village4"
+      ],
+      "signatures": [
+        {
+          "blockId": "auxiliaryblocks:blue_pastel",
+          "possiblePositions": [{ "x": 23, "y": 55, "z": 23 }]
+        },
+        {
+          "blockId": "auxiliaryblocks:light_blue_frameless_glass",
+          "possiblePositions": [{ "x": 23, "y": 54, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "challenge_village_fort",
+      "roomType": "ROOMTYPE_CHALLENGE",
+      "rotationMode": "fixed",
+      "variants": ["the_vault:vault/rooms/challenge/villagefort"],
+      "signatures": [
+        {
+          "blockId": "minecraft:black_concrete",
+          "possiblePositions": [{ "x": 23, "y": 54, "z": 23 }]
+        },
+        {
+          "blockId": "minecraft:podzol",
+          "possiblePositions": [{ "x": 23, "y": 30, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_painting",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/omega/painting",
+        "the_vault:vault/rooms/omega/painting1"
+      ],
+      "signatures": [
+        {
+          "blockId": "auxiliaryblocks:rusty_trapdoor",
+          "possiblePositions": [{ "x": 23, "y": 27, "z": 23 }]
+        },
+        {
+          "blockId": "simplylight:illuminant_block_on",
+          "possiblePositions": [{ "x": 23, "y": 26, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_pixel",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/omega/pixel",
+        "the_vault:vault/rooms/omega/pixel1"
+      ],
+      "signatures": [
+        {
+          "blockId": "auxiliaryblocks:white_frameless_glass",
+          "possiblePositions": [{ "x": 23, "y": 30, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_library",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "signatureMatchMode": "OR",
+      "variants": [
+        "the_vault:vault/rooms/omega/library",
+        "the_vault:vault/rooms/omega/library1",
+        "the_vault:vault/rooms/omega/library2"
+      ],
+      "signatures": [
+        {
+          "blockId": "minecraft:yellow_glazed_terracotta",
+          "possiblePositions": [{ "x": 23, "y": 55, "z": 23 }]
+        },
+        {
+          "blockId": "mcwwindows:lime_mosaic_glass",
+          "possiblePositions": [{ "x": 23, "y": 53, "z": 23 }]
+        },
+        {
+          "blockId": "minecraft:white_concrete",
+          "possiblePositions": [{ "x": 23, "y": 54, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_digsite",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/omega/digsite",
+        "the_vault:vault/rooms/omega/digsite1",
+        "the_vault:vault/rooms/omega/digsite2",
+        "the_vault:vault/rooms/omega/omega_digsite2"
+      ],
+      "signatures": [
+        {
+          "blockId": "auxiliaryblocks:smooth_gray_pastel",
+          "possiblePositions": [{ "x": 23, "y": 27, "z": 23 }]
+        },
+        {
+          "blockId": "auxiliaryblocks:lab_dark_metallic",
+          "possiblePositions": [{ "x": 23, "y": 55, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_warehouse",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "variants": ["the_vault:vault/rooms/omega/warehouse"],
+      "signatures": [
+        {
+          "blockId": "architects_palette:flint_block",
+          "possiblePositions": [{ "x": 23, "y": 29, "z": 23 }]
+        },
+        {
+          "blockId": "auxiliaryblocks:lab_light_gray",
+          "possiblePositions": [{ "x": 23, "y": 28, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_mush_room",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "signatureMatchMode": "OR",
+      "variants": [
+        "the_vault:vault/rooms/omega/mush_room",
+        "the_vault:vault/rooms/omega/mush_room1"
+      ],
+      "signatures": [
+        {
+          "blockId": "minecraft:podzol",
+          "possiblePositions": [{ "x": 23, "y": 24, "z": 23 }]
+        },
+        {
+          "blockId": "minecraft:brown_mushroom_block",
+          "possiblePositions": [{ "x": 23, "y": 30, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_cove",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "signatureMatchMode": "OR",
+      "variants": [
+        "the_vault:vault/rooms/omega/cove",
+        "the_vault:vault/rooms/omega/cove1",
+        "the_vault:vault/rooms/omega/cove2"
+      ],
+      "signatures": [
+        {
+          "blockId": "minecraft:spruce_slab",
+          "possiblePositions": [{ "x": 23, "y": 22, "z": 23 }]
+        },
+        {
+          "blockId": "minecraft:horn_coral_block",
+          "possiblePositions": [{ "x": 23, "y": 10, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "omega_mine",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "variants": ["the_vault:vault/rooms/omega/mine"],
+      "signatures": [
+        {
+          "blockId": "minecraft:lantern",
+          "possiblePositions": [
+            { "x": 23, "y": 40, "z": 23 },
+            { "x": 23, "y": 41, "z": 23 }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "omega_blacksmith",
+      "roomType": "ROOMTYPE_OMEGA",
+      "rotationMode": "fixed",
+      "variants": ["the_vault:vault/rooms/omega/blacksmith"],
+      "signatures": [
+        {
+          "blockId": "create:layered_deepslate",
+          "possiblePositions": [{ "x": 23, "y": 30, "z": 23 }]
+        }
+      ]
+    },
+    {
+      "key": "special_boss",
+      "roomType": "ROOMTYPE_BASIC",
+      "rotationMode": "fixed",
+      "variants": [
+        "the_vault:vault/rooms/special/boss1",
+        "the_vault:vault/rooms/special/boss2",
+        "the_vault:vault/rooms/special/boss3"
+      ],
+      "signatures": [
+        {
+          "blockId": "the_vault:rune_pillar",
+          "possiblePositions": [
+            { "x": 23, "y": 27, "z": 23 },
+            { "x": 23, "y": 29, "z": 23 }
+          ]
+        }
+      ]
+    }
+  ]
+}

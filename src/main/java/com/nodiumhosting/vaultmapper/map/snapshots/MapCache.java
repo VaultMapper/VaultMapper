@@ -23,10 +23,8 @@ public class MapCache {
 
     public static void updateCache() {
         MapSnapshot.makeSureFoldersExist();
-        try {
-            FileWriter writer = new FileWriter(cachePath);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(cachePath))) {
             Util.MAP_GSON.toJson(VaultMap.cells, writer);
-            writer.close();
         } catch (IOException e) {
             VaultMapper.LOGGER.error("Couldn't create map cache file");
         }
@@ -39,12 +37,12 @@ public class MapCache {
             return;
         }
 
-        try {
-            FileReader reader = new FileReader(cachePath);
+        try (BufferedReader reader = new BufferedReader(new FileReader(cachePath))) {
             Type saveType = new TypeToken<CopyOnWriteArrayList<VaultCell>>(){}.getType();
             VaultMap.cells = Util.MAP_GSON.fromJson(reader, saveType);
             VaultMap.refreshCache();
-        } catch (FileNotFoundException e) {}
+        } catch (IOException e) {
+        }
     }
 
 }

@@ -3,6 +3,7 @@ package com.nodiumhosting.vaultmapper.mixin;
 import com.google.common.collect.Ordering;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.nodiumhosting.vaultmapper.map.VaultMap;
+import com.nodiumhosting.vaultmapper.util.ColorUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -21,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-import static com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer.parseColor;
 import static net.minecraft.client.gui.GuiComponent.fill;
 
 @Mixin(PlayerTabOverlay.class)
@@ -96,7 +96,7 @@ public class PlayerTabOverlayMixin {
                 int k2 = j1 + j5 * i1 + j5 * 5;
                 int l2 = k1 + j2 * 9;
 
-                fill(pPoseStack, k2 - 8, l2, k2, l2 + 8, parseColor(VaultMap.players.get(uuid).color));
+                fill(pPoseStack, k2 - 8, l2, k2, l2 + 8, ColorUtil.parseHexColor(VaultMap.players.get(uuid).color));
             }
         }
     }

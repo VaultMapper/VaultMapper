@@ -22,6 +22,7 @@ public class KeybindEvents {
     public static KeyMapping openConfigKey;
     public static KeyMapping syncReconnectKey;
     public static KeyMapping toggleMapKey;
+    public static KeyMapping quickToggleMapVisibilityKey;
     public static KeyMapping toggleViewerCode;
 
     public static void registerKeyBinds() {
@@ -29,6 +30,7 @@ public class KeybindEvents {
         openConfigKey = registerKeyMapping("openconfig", GLFW.GLFW_KEY_F7);
         syncReconnectKey = registerKeyMapping("reconnectsync", GLFW.GLFW_KEY_UNKNOWN);
         toggleMapKey = registerKeyMapping("togglemap", GLFW.GLFW_KEY_EQUAL);
+        quickToggleMapVisibilityKey = registerKeyMapping("quicktogglemap", GLFW.GLFW_KEY_H);
         toggleViewerCode = registerKeyMapping("toggleviewercode", GLFW.GLFW_KEY_UNKNOWN);
     }
 
@@ -67,6 +69,10 @@ public class KeybindEvents {
         // Toggle rendering of the VaultMap
         if(toggleMapKey.consumeClick()) {
             VaultMap.toggleRendering();
+        }
+
+        if(quickToggleMapVisibilityKey.consumeClick()) {
+            VaultMap.toggleQuickMapVisibility();
         }
 
         // Toggle rendering of the viewer code

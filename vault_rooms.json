@@ -1,0 +1,1730 @@
+[
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "EAST",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": 23,
+      "y": 16,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "SOUTH",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": -71,
+      "y": 16,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": -165,
+      "y": 16,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": -165,
+      "y": 16,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": 23,
+      "y": 16,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": 211,
+      "y": 16,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:memory_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -165,
+      "y": 29,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/memory1",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "lookedAtBlock": {
+      "blockId": "the_vault:raid_controller",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 211,
+      "y": 29,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_1b0d1409-76a3-4fac-b582-83ce59ab8137",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/raid1",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:rune_pillar",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 27,
+      "relativeX": 23,
+      "x": 23,
+      "y": 27,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/special/boss2",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_BASIC",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:raid_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 117,
+      "y": 29,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/raid/rooms",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:x_mark_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 14,
+      "relativeX": 23,
+      "x": 117,
+      "y": 14,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/x-mark",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "auxiliaryblocks:rusty_trapdoor",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 27,
+      "relativeX": 23,
+      "x": 211,
+      "y": 27,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/painting",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "simplylight:illuminant_block_on",
+      "face": "DOWN",
+      "relativeZ": 23,
+      "relativeY": 26,
+      "relativeX": 23,
+      "x": 211,
+      "y": 26,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/painting",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:x_mark_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 14,
+      "relativeX": 23,
+      "x": 117,
+      "y": 14,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/x-mark",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:x_mark_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 14,
+      "relativeX": 23,
+      "x": 117,
+      "y": 14,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/x-mark",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "auxiliaryblocks:white_frameless_glass",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": 23,
+      "y": 30,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/pixel",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:x_mark_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 14,
+      "relativeX": 23,
+      "x": -71,
+      "y": 14,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/x-mark",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:raid_controller",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -165,
+      "y": 29,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/raid/rooms",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "auxiliaryblocks:white_frameless_glass",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": -71,
+      "y": 30,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/pixel",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "auxiliaryblocks:rusty_trapdoor",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 27,
+      "relativeX": 23,
+      "x": -165,
+      "y": 27,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/painting",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "simplylight:illuminant_block_on",
+      "face": "DOWN",
+      "relativeZ": 23,
+      "relativeY": 26,
+      "relativeX": 23,
+      "x": -165,
+      "y": 26,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/painting",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "decorative_blocks:bar_panel",
+      "face": "UP",
+      "relativeZ": 17,
+      "relativeY": 27,
+      "relativeX": 23,
+      "x": 117,
+      "y": 27,
+      "z": 299
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village2",
+      "roomOriginZ": 282,
+      "roomZ": 6,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:rune_pillar",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 23,
+      "y": 29,
+      "z": 305
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/special/boss1",
+      "roomOriginZ": 282,
+      "roomZ": 6,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_BASIC",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "auxiliaryblocks:white_frameless_glass",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": -71,
+      "y": 30,
+      "z": 399
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/pixel1",
+      "roomOriginZ": 376,
+      "roomZ": 8,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "the_vault:raid_controller",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -71,
+      "y": 29,
+      "z": 587
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/raid1",
+      "roomOriginZ": 564,
+      "roomZ": 12,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "lookedAtBlock": {
+      "blockId": "architects_palette:twisted_boards",
+      "face": "EAST",
+      "relativeZ": 23,
+      "relativeY": 12,
+      "relativeX": 23,
+      "x": -259,
+      "y": 12,
+      "z": 493
+    },
+    "dimension": "the_vault:vault_df2d9baf-a487-4124-9ae2-245db968e536",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/library2",
+      "roomOriginZ": 470,
+      "roomZ": 10,
+      "explored": true,
+      "roomX": -6,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -282
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:rune_pillar",
+      "face": "SOUTH",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 23,
+      "y": 29,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/special/boss1",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_BASIC",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:brown_mushroom_block",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": 117,
+      "y": 30,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mush_room",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:vault_glass",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 28,
+      "relativeX": 23,
+      "x": 211,
+      "y": 28,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/factory",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "simplylight:illuminant_block_on",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 43,
+      "relativeX": 23,
+      "x": 211,
+      "y": 43,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/factory",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:vault_glass",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 28,
+      "relativeX": 23,
+      "x": 305,
+      "y": 28,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/factory",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 6,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 282
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "simplylight:illuminant_block_on",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 43,
+      "relativeX": 23,
+      "x": 305,
+      "y": 43,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/factory",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 6,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 282
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:memory_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 117,
+      "y": 29,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/memory",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:memory_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 117,
+      "y": 29,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/memory",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:elite_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 211,
+      "y": 29,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/laboratory",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:elite_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 117,
+      "y": 29,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/laboratory",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "decorative_blocks:bar_panel",
+      "face": "UP",
+      "relativeZ": 37,
+      "relativeY": 31,
+      "relativeX": 40,
+      "x": 134,
+      "y": 31,
+      "z": 225
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "decorative_blocks:bar_panel",
+      "face": "UP",
+      "relativeZ": 40,
+      "relativeY": 31,
+      "relativeX": 9,
+      "x": 197,
+      "y": 31,
+      "z": 228
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:podzol",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 24,
+      "relativeX": 23,
+      "x": 23,
+      "y": 24,
+      "z": 211
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mush_room",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:podzol",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 24,
+      "relativeX": 23,
+      "x": -71,
+      "y": 24,
+      "z": 211
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mush_room",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:elite_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -165,
+      "y": 29,
+      "z": 211
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/laboratory",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:memory_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -71,
+      "y": 29,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/memory",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "decorative_blocks:bar_panel",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 27,
+      "relativeX": 16,
+      "x": -78,
+      "y": 27,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:oak_trapdoor",
+      "face": "UP",
+      "relativeZ": 17,
+      "relativeY": 31,
+      "relativeX": 24,
+      "x": -70,
+      "y": 31,
+      "z": -77
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:oak_trapdoor",
+      "face": "UP",
+      "relativeZ": 21,
+      "relativeY": 31,
+      "relativeX": 32,
+      "x": 32,
+      "y": 31,
+      "z": 115
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "decorative_blocks:bar_panel",
+      "face": "UP",
+      "relativeZ": 6,
+      "relativeY": 31,
+      "relativeX": 37,
+      "x": 37,
+      "y": 31,
+      "z": 100
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/village",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:rune_pillar",
+      "face": "EAST",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -165,
+      "y": 29,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/special/boss1",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_BASIC",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:elite_controller",
+      "face": "SOUTH",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": -165,
+      "y": 29,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/laboratory",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:vault_glass",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 28,
+      "relativeX": 23,
+      "x": -165,
+      "y": 28,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/factory",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "simplylight:illuminant_block_on",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 43,
+      "relativeX": 23,
+      "x": -165,
+      "y": 43,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/factory",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:podzol",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 24,
+      "relativeX": 23,
+      "x": -71,
+      "y": 24,
+      "z": -259
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mush_room",
+      "roomOriginZ": -282,
+      "roomZ": -6,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:elite_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 211,
+      "y": 29,
+      "z": -353
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/laboratory2",
+      "roomOriginZ": -376,
+      "roomZ": -8,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "auxiliaryblocks:rusty_trapdoor",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 27,
+      "relativeX": 23,
+      "x": 305,
+      "y": 27,
+      "z": -259
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/painting1",
+      "roomOriginZ": -282,
+      "roomZ": -6,
+      "explored": true,
+      "roomX": 6,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 282
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "simplylight:illuminant_block_on",
+      "face": "DOWN",
+      "relativeZ": 23,
+      "relativeY": 26,
+      "relativeX": 23,
+      "x": 305,
+      "y": 26,
+      "z": -259
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/painting1",
+      "roomOriginZ": -282,
+      "roomZ": -6,
+      "explored": true,
+      "roomX": 6,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 282
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "minecraft:podzol",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": 493,
+      "y": 30,
+      "z": -353
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/villagefort",
+      "roomOriginZ": -376,
+      "roomZ": -8,
+      "explored": true,
+      "roomX": 10,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 470
+    }
+  },
+  {
+    "vaultId": "vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "lookedAtBlock": {
+      "blockId": "the_vault:dragon_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 16,
+      "relativeX": 23,
+      "x": 399,
+      "y": 16,
+      "z": -541
+    },
+    "dimension": "the_vault:vault_490cc637-ff1f-4ba9-8a4d-0a65ce35b1a5",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/dragon1",
+      "roomOriginZ": -564,
+      "roomZ": -12,
+      "explored": true,
+      "roomX": 8,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 376
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:spruce_slab",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 22,
+      "relativeX": 23,
+      "x": 211,
+      "y": 22,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/cove",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:smooth_sandstone",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 11,
+      "relativeX": 23,
+      "x": 211,
+      "y": 11,
+      "z": 23
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/cove",
+      "roomOriginZ": 0,
+      "roomZ": 0,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "everycomp:mct/ecologics/walnut_beach_trapdoor",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 32,
+      "relativeX": 23,
+      "x": 211,
+      "y": 32,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/library",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "the_vault:memory_room_controller",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 29,
+      "relativeX": 23,
+      "x": 399,
+      "y": 29,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/challenge/memory1",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 8,
+      "detectedRoomType": "ROOMTYPE_CHALLENGE",
+      "roomOriginX": 376
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "architects_palette:twisted_boards",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 12,
+      "relativeX": 23,
+      "x": 399,
+      "y": 12,
+      "z": 305
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/library",
+      "roomOriginZ": 282,
+      "roomZ": 6,
+      "explored": true,
+      "roomX": 8,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 376
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:horn_coral_block",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 10,
+      "relativeX": 23,
+      "x": 211,
+      "y": 10,
+      "z": 305
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/cove",
+      "roomOriginZ": 282,
+      "roomZ": 6,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "everycomp:mct/ecologics/walnut_beach_trapdoor",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 32,
+      "relativeX": 23,
+      "x": 117,
+      "y": 32,
+      "z": 305
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/library",
+      "roomOriginZ": 282,
+      "roomZ": 6,
+      "explored": true,
+      "roomX": 2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 94
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "create:layered_deepslate",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": 23,
+      "y": 30,
+      "z": 211
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/blacksmith",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "create:layered_deepslate",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 30,
+      "relativeX": 23,
+      "x": -71,
+      "y": 30,
+      "z": 211
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/blacksmith",
+      "roomOriginZ": 188,
+      "roomZ": 4,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:lantern",
+      "face": "SOUTH",
+      "relativeZ": 23,
+      "relativeY": 41,
+      "relativeX": 23,
+      "x": 23,
+      "y": 41,
+      "z": 117
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mine",
+      "roomOriginZ": 94,
+      "roomZ": 2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:lantern",
+      "face": "WEST",
+      "relativeZ": 23,
+      "relativeY": 41,
+      "relativeX": 23,
+      "x": 23,
+      "y": 41,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mine",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:horn_coral_block",
+      "face": "EAST",
+      "relativeZ": 23,
+      "relativeY": 10,
+      "relativeX": 23,
+      "x": 23,
+      "y": 10,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/cove",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": 0,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 0
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:lantern",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 40,
+      "relativeX": 23,
+      "x": -71,
+      "y": 40,
+      "z": -259
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mine",
+      "roomOriginZ": -282,
+      "roomZ": -6,
+      "explored": true,
+      "roomX": -2,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -94
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:spruce_slab",
+      "face": "SOUTH",
+      "relativeZ": 23,
+      "relativeY": 22,
+      "relativeX": 23,
+      "x": -165,
+      "y": 22,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/cove",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:smooth_sandstone",
+      "face": "UP",
+      "relativeZ": 23,
+      "relativeY": 11,
+      "relativeX": 23,
+      "x": -165,
+      "y": 11,
+      "z": -165
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/cove",
+      "roomOriginZ": -188,
+      "roomZ": -4,
+      "explored": true,
+      "roomX": -4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": -188
+    }
+  },
+  {
+    "vaultId": "vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "lookedAtBlock": {
+      "blockId": "minecraft:lantern",
+      "face": "NORTH",
+      "relativeZ": 23,
+      "relativeY": 41,
+      "relativeX": 23,
+      "x": 211,
+      "y": 41,
+      "z": -71
+    },
+    "dimension": "the_vault:vault_f5af803f-3138-4351-8a5d-ae6d3b82d95a",
+    "room": {
+      "detectedCellType": "CELLTYPE_ROOM",
+      "detectedRoomName": "the_vault:vault/rooms/omega/mine",
+      "roomOriginZ": -94,
+      "roomZ": -2,
+      "explored": true,
+      "roomX": 4,
+      "detectedRoomType": "ROOMTYPE_OMEGA",
+      "roomOriginX": 188
+    }
+  }
+]

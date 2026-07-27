@@ -3,9 +3,14 @@ package com.nodiumhosting.vaultmapper.gui.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialDetectionConfig;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialDetectionConfigManager;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialFeatureDefinition;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialScanToggleConfigManager;
 import com.nodiumhosting.vaultmapper.gui.component.*;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
 import com.nodiumhosting.vaultmapper.util.Clamp;
+import com.nodiumhosting.vaultmapper.util.ColorUtil;
 import com.nodiumhosting.vaultmapper.util.Util;
 import it.unimi.dsi.fastutil.Function;
 import net.minecraft.ChatFormatting;
@@ -15,7 +20,20 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class VaultMapperConfigScreen extends Screen {
+
+    private static final class SpecialToggleEntry {
+        private final RoomSpecialFeatureDefinition featureDefinition;
+        private final Button button;
+
+        private SpecialToggleEntry(RoomSpecialFeatureDefinition featureDefinition, Button button) {
+            this.featureDefinition = featureDefinition;
+            this.button = button;
+        }
+    }
 
     public VaultMapperConfigScreen() {
         super(new TextComponent("Vault Mapper Config"));
@@ -23,19 +41,19 @@ public class VaultMapperConfigScreen extends Screen {
 
     // copied block from overlay renderer, should move elsewhere
     private static int parseColor(String hexColor) {
-        try {
-            if (hexColor.startsWith("#")) {
-                hexColor = hexColor.substring(1);
-            }
+        return ColorUtil.parseHexColor(hexColor);
+    }
 
-            if (hexColor.length() == 6) {
-                hexColor = "FF" + hexColor;  // Add full opacity if not specified
-            }
+    private static String getSpecialToggleText(RoomSpecialFeatureDefinition featureDefinition) {
+        String label = featureDefinition != null && featureDefinition.displayName != null && !featureDefinition.displayName.isEmpty()
+                ? featureDefinition.displayName
+                : featureDefinition != null && featureDefinition.id != null ? featureDefinition.id : "Special";
+        return label + ": " + (RoomSpecialScanToggleConfigManager.isEnabled(featureDefinition.id) ? "On" : "Off");
+    }
 
-            // Cast to int to use it as a 32-bit ARGB color
-            return (int) Long.parseLong(hexColor, 16);
-        } catch (NumberFormatException e) {
-            return 0xFFFFFFFF; // Default color (white with full opacity)
+    private static void refreshSpecialToggleText(SpecialToggleEntry entry) {
+        if (entry != null && entry.button != null && entry.featureDefinition != null) {
+            entry.button.setMessage(new TextComponent(getSpecialToggleText(entry.featureDefinition)));
         }
     }
 
@@ -54,12 +72,44 @@ public class VaultMapperConfigScreen extends Screen {
         int width = 100;
         int elWidthColor = width - elHeight - 5;
 
-        Button mapEnabledButton = new Button(this.width / 2 - 100, getScaledY(1), elWidth, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent("Map Enabled: " + ClientConfig.MAP_ENABLED.get()), button -> {
+        Button mapEnabledButton = new Button(this.width / 2 - 100, getScaledY(1), 97, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent("Map: " + (ClientConfig.MAP_ENABLED.get() ? "On" : "Off")), button -> {
             ClientConfig.MAP_ENABLED.set(!ClientConfig.MAP_ENABLED.get());
             ClientConfig.SPEC.save();
-            button.setMessage(new TextComponent("Map Enabled: " + ClientConfig.MAP_ENABLED.get()));
+            button.setMessage(new TextComponent("Map: " + (ClientConfig.MAP_ENABLED.get() ? "On" : "Off")));
         });
         this.addRenderableWidget(mapEnabledButton);
+
+        Button loadedRoomScanButton = new Button(this.width / 2 + 3, getScaledY(1), 97, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent("Scan: " + (ClientConfig.SCAN_LOADED_ROOMS.get() ? "On" : "Off")), button -> {
+            ClientConfig.SCAN_LOADED_ROOMS.set(!ClientConfig.SCAN_LOADED_ROOMS.get());
+            ClientConfig.SPEC.save();
+            button.setMessage(new TextComponent("Scan: " + (ClientConfig.SCAN_LOADED_ROOMS.get() ? "On" : "Off")));
+        },
+            (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Scan loaded rooms around the player"), pMouseX, pMouseY));
+        this.addRenderableWidget(loadedRoomScanButton);
+
+        RoomSpecialDetectionConfig detectionConfig = RoomSpecialDetectionConfigManager.getActiveConfig();
+        List<SpecialToggleEntry> specialToggleEntries = new ArrayList<>();
+        if (detectionConfig != null && detectionConfig.getEnabledFeatures() != null) {
+            int specialIndex = 0;
+            for (RoomSpecialFeatureDefinition featureDefinition : detectionConfig.getEnabledFeatures()) {
+                if (featureDefinition == null || featureDefinition.id == null || featureDefinition.id.isEmpty()) {
+                    continue;
+                }
+
+                // Single column layout on the right side
+                int buttonX = this.width - 220;
+                int buttonY = getScaledY(1.5f + (specialIndex * 0.5f));
+                Button specialButton = new Button(buttonX, buttonY, 210, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent(getSpecialToggleText(featureDefinition)), button -> {
+                    RoomSpecialScanToggleConfigManager.toggle(featureDefinition.id);
+                    refreshSpecialToggleText(new SpecialToggleEntry(featureDefinition, button));
+                    VaultMapOverlayRenderer.prep();
+                },
+                    (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Scan current room for " + featureDefinition.displayName), pMouseX, pMouseY));
+                this.addRenderableWidget(specialButton);
+                specialToggleEntries.add(new SpecialToggleEntry(featureDefinition, specialButton));
+                specialIndex++;
+            }
+        }
 
         Function<Float, String> mapScaleGetter = (value) -> {
             int valueInt = (int) value;
@@ -81,6 +131,16 @@ public class VaultMapperConfigScreen extends Screen {
             return valueInt + " pixel" + (valueInt != 1 ? "s" : "");
         };
 
+        Function<Float, String> percentGetter = (value) -> {
+            int valueInt = (int) value;
+            return valueInt + "%";
+        };
+
+        Function<Float, String> cellsGetter = (value) -> {
+            int valueInt = (int) value;
+            return "+" + valueInt + " cells";
+        };
+
         Slider mapScale = new Slider(this.width / 2 + 10, getScaledY(2), "", ClientConfig.MAP_SCALE.get(), 30, 3, mapScaleGetter, width, elHeight, 10);
         this.addRenderableWidget(mapScale);
 
@@ -93,6 +153,12 @@ public class VaultMapperConfigScreen extends Screen {
         Slider iconCrop = new Slider(this.width / 2 + 10, getScaledY(5), "", ClientConfig.ICON_CROP.get(), 8, 0, cropGetter, width, elHeight, 0);
         this.addRenderableWidget(iconCrop);
 
+        Slider identifiedSpecialIconScale = new Slider(this.width / 2 + 10, getScaledY(5.5f), "", ClientConfig.IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE.get(), 100, 30, percentGetter, width, elHeight, 60);
+        this.addRenderableWidget(identifiedSpecialIconScale);
+
+        Slider identificationExtraRadius = new Slider(this.width / 2 + 10, getScaledY(6.5f), "", ClientConfig.IDENTIFICATION_EXTRA_CELL_RADIUS.get(), 8, 0, cellsGetter, width, elHeight, 1);
+        this.addRenderableWidget(identificationExtraRadius);
+
         MutableComponent enabledText = new TextComponent("✔").withStyle(ChatFormatting.BOLD, ChatFormatting.GREEN);
         MutableComponent disabledText = new TextComponent("❌").withStyle(ChatFormatting.BOLD, ChatFormatting.RED);
 
@@ -103,16 +169,6 @@ public class VaultMapperConfigScreen extends Screen {
             },
             (pButton, pPoseStack, pMouseX, pMouseY) -> renderTooltip(pPoseStack, new TextComponent("Player Centric Rendering"), pMouseX, pMouseY));
         this.addRenderableWidget(playerCentric);
-
-        Button enablePCBorderButton = new Button(this.width / 2 + width + 15 + 2 + elHeight, getScaledY(4), elHeight, Math.min(elHeight, 20), ClientConfig.PC_BORDER.get() ? enabledText : disabledText, button -> {
-            ClientConfig.PC_BORDER.set(!ClientConfig.PC_BORDER.get());
-            ClientConfig.SPEC.save();
-            button.setMessage(ClientConfig.PC_BORDER.get() ? enabledText : disabledText);
-            },
-            (pButton, pPoseStack, pMouseX, pMouseY) -> {
-                renderTooltip(pPoseStack, new TextComponent("Player Centric Border"), pMouseX, pMouseY);
-            });
-        this.addRenderableWidget(enablePCBorderButton);
 
         EditBoxReset mapXOffset = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(6), width, elHeight, new TextComponent("MAP_X_OFFSET"), "0");
         mapXOffset.setValue(ClientConfig.MAP_X_OFFSET.get().toString());
@@ -303,6 +359,15 @@ public class VaultMapperConfigScreen extends Screen {
         this.addRenderableWidget(syncColorPicker);
         syncColor.setResponder((value) -> syncColorPicker.setColor(parseColor(value)));
 
+        EditBoxReset identifiedUndiscoveredRoomColor = new EditBoxReset(this.font, this.width / 2 + 10, getScaledY(21), elWidthColor, elHeight, new TextComponent("IDENTIFIED_UNDISCOVERED_ROOM_COLOR"), "#7A8896");
+        identifiedUndiscoveredRoomColor.setValue(ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.get());
+        this.addRenderableWidget(identifiedUndiscoveredRoomColor);
+        ColorButton identifiedUndiscoveredRoomColorPicker = new ColorButton(this.width / 2 + elWidthColor + 5 + 10, getScaledY(21), elHeight, elHeight, parseColor(ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.get()), button -> {
+
+        }, identifiedUndiscoveredRoomColor, colorPicker);
+        this.addRenderableWidget(identifiedUndiscoveredRoomColorPicker);
+        identifiedUndiscoveredRoomColor.setResponder((value) -> identifiedUndiscoveredRoomColorPicker.setColor(parseColor(value)));
+
         Button saveButton = new Button(this.width - 100 - 5, this.height - 20 - 5, 100,  20, new TextComponent("Save"), button -> {
             try {
                 ClientConfig.MAP_X_OFFSET.set(Integer.parseInt(mapXOffset.getValue()));
@@ -334,6 +399,9 @@ public class VaultMapperConfigScreen extends Screen {
 
             ClientConfig.PC_CUTOFF.set(PCCutoff.sliderValue);
             ClientConfig.ICON_CROP.set(iconCrop.sliderValue);
+            ClientConfig.IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE.set(identifiedSpecialIconScale.sliderValue);
+            ClientConfig.IDENTIFICATION_EXTRA_CELL_RADIUS.set(identificationExtraRadius.sliderValue);
+            ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.set(identifiedUndiscoveredRoomColor.getValue());
             ClientConfig.SPEC.save();
 
             VaultMapOverlayRenderer.prep();
@@ -362,14 +430,21 @@ public class VaultMapperConfigScreen extends Screen {
             syncServer.setValue("wss://vmsync.ndmh.xyz");
             enableSyncButton.setMessage(enabledText);
             showViewerCodeButton.setMessage(disabledText);
+            loadedRoomScanButton.setMessage(new TextComponent("Scan: Off"));
+            RoomSpecialScanToggleConfigManager.setAllEnabled(false);
+            for (SpecialToggleEntry specialToggleEntry : specialToggleEntries) {
+                refreshSpecialToggleText(specialToggleEntry);
+            }
             String randColor = Util.RandomColor();
 
             syncColor.setValue(randColor);
 
             PCCutoff.sliderValue = 20;
             playerCentric.setMessage(disabledText);
-            enablePCBorderButton.setMessage(enabledText);
             iconCrop.sliderValue = 0;
+            identifiedSpecialIconScale.sliderValue = 60;
+            identificationExtraRadius.sliderValue = 1;
+            identifiedUndiscoveredRoomColor.setValue("#7A8896");
 
             ClientConfig.MAP_SCALE.set(10);
             ClientConfig.ARROW_SCALE.set(10);
@@ -392,11 +467,14 @@ public class VaultMapperConfigScreen extends Screen {
             ClientConfig.SYNC_ENABLED.set(true);
             ClientConfig.SYNC_COLOR.set(randColor);
             ClientConfig.SHOW_VIEWER_CODE.set(false);
+            ClientConfig.SCAN_LOADED_ROOMS.set(false);
 
             ClientConfig.PC_CUTOFF.set(20);
             ClientConfig.PLAYER_CENTRIC_RENDERING.set(false);
             ClientConfig.PC_BORDER.set(true);
-
+            ClientConfig.IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE.set(60);
+            ClientConfig.IDENTIFICATION_EXTRA_CELL_RADIUS.set(1);
+            ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.set("#7A8896");
             ClientConfig.SPEC.save();
 
             VaultMapOverlayRenderer.onWindowResize();
@@ -422,6 +500,8 @@ public class VaultMapperConfigScreen extends Screen {
         this.font.draw(pose, "Arrow Scale", this.width / 2 - 110, getScaledY(3) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Player Centric Cutoff", this.width / 2 - 110, getScaledY(4) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Icon Crop", this.width / 2 - 110, getScaledY(5) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Undisc Special Icon Scale", this.width / 2 - 110, getScaledY(5.5f) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Identify Extra Radius", this.width / 2 - 110, getScaledY(6.5f) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Map X Offset", this.width / 2 - 110, getScaledY(6) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Map Y Offset", this.width / 2 - 110, getScaledY(7) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Map X Anchor", this.width / 2 - 110, getScaledY(8) + offsetY, 0xFFFFFFFF);
@@ -437,6 +517,7 @@ public class VaultMapperConfigScreen extends Screen {
         this.font.draw(pose, "Resource Room Color", this.width / 2 - 110, getScaledY(18) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "VMSync", this.width / 2 - 110, getScaledY(19) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Sync Color", this.width / 2 - 110, getScaledY(20) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Identified Undisc Color", this.width / 2 - 110, getScaledY(21) + offsetY, 0xFFFFFFFF);
 
         super.render(pose, mouseX, mouseY, partialTick);
 

@@ -2,7 +2,11 @@ package com.nodiumhosting.vaultmapper;
 
 import com.mojang.logging.LogUtils;
 import com.nodiumhosting.vaultmapper.commands.VaultMapperCommand;
+import com.nodiumhosting.vaultmapper.config.BrazierTargetConfigManager;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
+import com.nodiumhosting.vaultmapper.config.RoomSignatureConfigManager;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialDetectionConfigManager;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialScanToggleConfigManager;
 import com.nodiumhosting.vaultmapper.events.KeybindEvents;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
 import com.nodiumhosting.vaultmapper.util.UpdateChecker;
@@ -66,6 +70,10 @@ public class VaultMapper {
 
         UpdateChecker.checkForUpdates();
         KeybindEvents.registerKeyBinds();
+        RoomSignatureConfigManager.init();
+        BrazierTargetConfigManager.init();
+        RoomSpecialDetectionConfigManager.init();
+        RoomSpecialScanToggleConfigManager.init();
 
         VaultMapOverlayRenderer.prep();
     }

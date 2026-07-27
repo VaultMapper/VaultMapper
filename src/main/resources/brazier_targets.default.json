@@ -1,0 +1,30 @@
+[
+  {
+    "id": "AS",
+    "modifiers": ["the_vault:abundant_souls"]
+  },
+  {
+    "id": "CE",
+    "modifiers": ["the_vault:bronze_nuke"]
+  },
+  {
+    "id": "CD",
+    "modifiers": ["the_vault:champion_paradox"]
+  },
+  {
+    "id": "DD",
+    "modifiers": ["the_vault:dungeon_doors"]
+  },
+  {
+    "id": "IC",
+    "modifiers": ["the_vault:incredible_chests"]
+  },
+  {
+    "id": "OO",
+    "modifiers": ["the_vault:opulent_ores"]
+  },
+  {
+    "id": "MM",
+    "modifiers": ["the_vault:more_experience", "the_vault:more_mobs"]
+  }
+]

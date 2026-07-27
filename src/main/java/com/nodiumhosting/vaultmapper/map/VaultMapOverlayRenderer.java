@@ -10,7 +10,11 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
+import com.nodiumhosting.vaultmapper.config.RoomSpecialScanToggleConfigManager;
+import com.nodiumhosting.vaultmapper.map.special.RoomSpecialTextRenderer;
 import com.nodiumhosting.vaultmapper.proto.CellType;
+import com.nodiumhosting.vaultmapper.proto.RoomType;
+import com.nodiumhosting.vaultmapper.util.ColorUtil;
 import com.nodiumhosting.vaultmapper.util.MapRoomIconUtil;
 import iskallia.vault.core.vault.ClientVaults;
 import iskallia.vault.core.vault.Vault;
@@ -28,10 +32,11 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.ArrayList;
 
 import static java.lang.Math.abs;
 
@@ -56,6 +61,7 @@ public class VaultMapOverlayRenderer {
         if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
         if (!enabled) return;
         if (!ClientConfig.MAP_ENABLED.get()) return;
+        if (VaultMap.isQuickMapHiddenInVault()) return;
         Vault vault = ClientVaults.getActive().orElse(null);
         if (vault != null) {
             if(VaultUtils.isHeraldVault(vault)) {
@@ -67,7 +73,11 @@ public class VaultMapOverlayRenderer {
         int offsetX = ClientConfig.MAP_X_OFFSET.get();
         int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
 
-        if (VaultMap.currentRoom != null) {
+        var mcPlayer = Minecraft.getInstance().player;
+        if (mcPlayer != null) {
+            playerX = (int) Math.floor(mcPlayer.getX() / 47.0);
+            playerZ = (int) Math.floor(mcPlayer.getZ() / 47.0);
+        } else if (VaultMap.currentRoom != null) {
             playerX = VaultMap.currentRoom.x;
             playerZ = VaultMap.currentRoom.z;
         } else {
@@ -86,6 +96,61 @@ public class VaultMapOverlayRenderer {
             GuiComponent.drawCenteredString(event.getMatrixStack(), Minecraft.getInstance().font, syncError, (int) centerX + offsetX, (int) mapAnchorZ + offsetZ + (int) offset, 0xFFFFFF);
         }
 
+        ArrayList<String> specialLines = new ArrayList<>();
+        String brazierOverlayLine = VaultMap.getCurrentRoomBrazierOverlayText();
+        if (brazierOverlayLine != null && !brazierOverlayLine.isEmpty()) {
+            specialLines.add("BRAZIER|" + brazierOverlayLine);
+        }
+        String cakeOverlayLine = VaultMap.getCurrentRoomCakeOverlayText();
+        if (cakeOverlayLine != null && !cakeOverlayLine.isEmpty()) {
+            specialLines.add("CAKE|" + cakeOverlayLine);
+        }
+        List<String> pylonLines = VaultMap.getCurrentRoomPylonOverlayLines();
+        if (pylonLines != null && !pylonLines.isEmpty()) {
+            for (String line : pylonLines) {
+                specialLines.add("PYLON|" + line);
+            }
+        }
+        List<String> godChallengeLines = VaultMap.getCurrentRoomGodAltarOverlayLines();
+        if (godChallengeLines != null && !godChallengeLines.isEmpty()) {
+            for (String line : godChallengeLines) {
+                specialLines.add("GOD|" + line);
+            }
+        }
+
+        if (!specialLines.isEmpty()) {
+            int guiHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+            int guiWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+            float specialTextScale = Math.max(0.38f, Math.min(0.62f, mapScaleMultiplier * 0.5f));
+            int scaledLineHeight = Math.max(1, Math.round((Minecraft.getInstance().font.lineHeight + 1) * specialTextScale));
+            int groupGap = Math.max(1, Math.round(2.0f * specialTextScale));
+            int totalGap = 0;
+            for (int i = 1; i < specialLines.size(); i++) {
+                String prevType = specialLines.get(i - 1).split("\\|", 2)[0];
+                String currentType = specialLines.get(i).split("\\|", 2)[0];
+                if (!prevType.equals(currentType)) {
+                    totalGap += groupGap;
+                }
+            }
+            int textBlockHeight = specialLines.size() * scaledLineHeight + totalGap;
+
+            // Position at center-bottom with space for hotbar
+            float startY = guiHeight - textBlockHeight - 64;
+            float lineY = startY;
+            String previousType = null;
+            for (String specialLine : specialLines) {
+                String currentType = specialLine.split("\\|", 2)[0];
+                if (previousType != null && !previousType.equals(currentType)) {
+                    lineY += groupGap;
+                }
+
+                RoomSpecialTextRenderer.drawSpecialInfoLine(event.getMatrixStack(), guiWidth / 2, lineY, specialLine, VaultMap.currentRoomBrazierMatchesTarget(), specialTextScale);
+                lineY += scaledLineHeight;
+                previousType = currentType;
+            }
+        }
+
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         RenderSystem.enableBlend();
         RenderSystem.disableTexture();
@@ -94,16 +159,11 @@ public class VaultMapOverlayRenderer {
 
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-        // map border if player centric render and border enabled in config
-        if (playerCentricRender && ClientConfig.PC_BORDER.get()) {
-            renderMapBorderPC(bufferBuilder, 0xDD808080);
-        }
-
         // Tunnel map
         if (ClientConfig.SHOW_TUNNELS.get()) {
             for (VaultCell vaultCell : VaultMap.cells) {
                 if ((vaultCell.cellType == CellType.CELLTYPE_TUNNEL_X || vaultCell.cellType == CellType.CELLTYPE_TUNNEL_Z) && shouldRenderCell(vaultCell)) {
-                    renderCell(bufferBuilder, vaultCell, parseColor(VaultMap.getCellColor(vaultCell)));
+                    renderStyledCell(bufferBuilder, vaultCell);
                 }
             }
         }
@@ -111,7 +171,7 @@ public class VaultMapOverlayRenderer {
         // cell map
         for (VaultCell vaultCell : VaultMap.cells) {
             if (vaultCell.cellType == CellType.CELLTYPE_ROOM && shouldRenderCell(vaultCell)) {
-                renderCell(bufferBuilder, vaultCell, parseColor(VaultMap.getCellColor(vaultCell)));
+                renderStyledCell(bufferBuilder, vaultCell);
             }
         }
 
@@ -127,6 +187,9 @@ public class VaultMapOverlayRenderer {
             RenderSystem.disableBlend();
             for (VaultCell vaultCell : VaultMap.cells) {
                 if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
+                    continue;
+                }
+                if (!vaultCell.explored && !vaultCell.inscripted && !isIdentifiedSpecialUndiscoveredRoom(vaultCell)) {
                     continue;
                 }
 
@@ -172,6 +235,35 @@ public class VaultMapOverlayRenderer {
             BufferUploader.end(bufferBuilder); // render the map
         }
 
+        RenderSystem.enableTexture();
+        RenderSystem.disableBlend();
+
+        PoseStack poseStack = event.getMatrixStack();
+        for (VaultCell cell : VaultMap.cells) {
+            if (cell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(cell)) {
+                continue;
+            }
+
+            boolean discoveredRoom = cell.explored;
+            boolean identifiedUndiscoveredRoom = !cell.explored && isIdentifiedSpecialUndiscoveredRoom(cell);
+            if (!discoveredRoom && !identifiedUndiscoveredRoom) {
+                continue;
+            }
+
+            String centerLetter = VaultMap.getRoomCenterIndicatorLetter(cell);
+
+            if (centerLetter == null || centerLetter.isEmpty()) {
+                continue;
+            }
+
+            renderBossTypeLetter(poseStack, cell, centerLetter);
+        }
+
+        RenderSystem.enableBlend();
+        RenderSystem.disableTexture();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
         bufferBuilder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         // player thingies
         for (VaultMap.MapPlayer player : VaultMap.players.values()) {
@@ -187,14 +279,44 @@ public class VaultMapOverlayRenderer {
         BufferUploader.end(bufferBuilder);
 
         // player thingy TODO: Might need to adjust this thing as the previous loop handles it
-        var currentPlayer = new VaultMap.MapPlayer();
-        currentPlayer.x = playerX;
-        currentPlayer.y = playerZ;
-        currentPlayer.yaw = Minecraft.getInstance().player.getYHeadRot();
-        currentPlayer.color = ClientConfig.POINTER_COLOR.get();
-        bufferBuilder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-        renderPlayerArrow(bufferBuilder, currentPlayer);
+        var currentPlayer = Minecraft.getInstance().player;
+        if (currentPlayer != null) {
+            float currentPlayerRoomX = (float) (currentPlayer.getX() / 47.0 - 0.5);
+            float currentPlayerRoomZ = (float) (currentPlayer.getZ() / 47.0 - 0.5);
 
+            bufferBuilder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+            renderCurrentPlayerArrow(bufferBuilder, currentPlayerRoomX, currentPlayerRoomZ, currentPlayer.getYHeadRot(), parseColor(ClientConfig.POINTER_COLOR.get()));
+            bufferBuilder.end();
+            BufferUploader.end(bufferBuilder);
+        }
+
+        RenderSystem.enableBlend();
+        RenderSystem.disableTexture();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        if (RoomSpecialScanToggleConfigManager.isEnabled("god_altar")) {
+            for (VaultCell cell : VaultMap.cells) {
+                if (cell.cellType == CellType.CELLTYPE_ROOM && shouldRenderCell(cell)) {
+                    renderGodAltarIndicatorDots(bufferBuilder, cell);
+                }
+            }
+        }
+        if (RoomSpecialScanToggleConfigManager.isEnabled("pylon")) {
+            for (VaultCell cell : VaultMap.cells) {
+                if (cell.cellType == CellType.CELLTYPE_ROOM && shouldRenderCell(cell)) {
+                    renderPylonIndicatorDots(bufferBuilder, cell);
+                }
+            }
+        }
+        if (RoomSpecialScanToggleConfigManager.isEnabled("cake")) {
+            for (VaultCell cell : VaultMap.cells) {
+                if (cell.cellType == CellType.CELLTYPE_ROOM && shouldRenderCell(cell)) {
+                    renderCakeIndicatorDots(bufferBuilder, cell);
+                }
+            }
+        }
         bufferBuilder.end();
         BufferUploader.end(bufferBuilder);
 
@@ -221,11 +343,13 @@ public class VaultMapOverlayRenderer {
         float arrowZ;
         if (playerCentricRender) {
             if (abs(data.x - playerX) > cutoff || abs(data.y - playerZ) > cutoff) return;
-            arrowX = centerX + (data.x - playerX) * mapRoomWidth + offsetX;
-            arrowZ = centerZ + (data.y - playerZ) * mapRoomWidth + offsetZ;
+            Vec2 rotated = rotateVector(data.x - playerX, data.y - playerZ);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
         } else {
-            arrowX = centerX + data.x * mapRoomWidth + offsetX;
-            arrowZ = centerZ + data.y * mapRoomWidth + offsetZ;
+            Vec2 rotated = rotateVector(data.x, data.y);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
         }
 
         UUID id = UUID.fromString(uuid);
@@ -254,44 +378,71 @@ public class VaultMapOverlayRenderer {
         float arrowZ;
         if (playerCentricRender) {
             if (abs(data.x - playerX) > cutoff || abs(data.y - playerZ) > cutoff) return;
-            arrowX = centerX + (data.x - playerX) * mapRoomWidth + offsetX; //breaks with certain high values, god knows why
-            arrowZ = centerZ + (data.y - playerZ) * mapRoomWidth + offsetZ; //breaks with certain high values, god knows why
+            Vec2 rotated = rotateVector(data.x - playerX, data.y - playerZ);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX; //breaks with certain high values, god knows why
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ; //breaks with certain high values, god knows why
         } else {
-            arrowX = centerX + data.x * mapRoomWidth + offsetX; //breaks with certain high values, god knows why
-            arrowZ = centerZ + data.y * mapRoomWidth + offsetZ; //breaks with certain high values, god knows why
+            Vec2 rotated = rotateVector(data.x, data.y);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
         }
-        var triag = getRotatedTriangle(data.yaw);
+
+        float[] triag = getRotatedTriangle(data.yaw + getMapRotationDegrees());
         int color = parseColor(data.color);
-        bufferBuilder.vertex(triag.get(0) + arrowX, triag.get(1) + arrowZ, 0).color(color).endVertex();
-        bufferBuilder.vertex(triag.get(2) + arrowX, triag.get(3) + arrowZ, 0).color(color).endVertex();
-        bufferBuilder.vertex(triag.get(4) + arrowX, triag.get(5) + arrowZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(triag[0] + arrowX, triag[1] + arrowZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(triag[2] + arrowX, triag[3] + arrowZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(triag[4] + arrowX, triag[5] + arrowZ, 0).color(color).endVertex();
     }
 
-    private static ArrayList<Float> getRotatedTriangle(float yaw) { // returns three points that make a rotated triangle when added with mapx,z
-        double arrowScale = ClientConfig.ARROW_SCALE.get() * 0.03f;
-        double x1 = -3 * mapRoomWidth * arrowScale + mapRoomWidth / 2;
-        double y1 = -2 * mapRoomWidth * arrowScale;
-        double x2 = -3 * mapRoomWidth * arrowScale + mapRoomWidth / 2;
-        double y2 = 2 * mapRoomWidth * arrowScale;
-        double x3 = 3 * mapRoomWidth * arrowScale + mapRoomWidth / 2;
-        double y3 = 0 * mapRoomWidth * arrowScale;
+    private static void renderCurrentPlayerArrow(BufferBuilder bufferBuilder, float exactRoomX, float exactRoomZ, float yaw, int color) {
+        int offsetX = ClientConfig.MAP_X_OFFSET.get();
+        int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
 
-        double cx = (x1 + x2) / 2; // centers to rotate about
-        double cy = (y1 + y2) / 2;
+        float arrowX;
+        float arrowZ;
+        if (playerCentricRender) {
+            Vec2 rotated = rotateVector(exactRoomX - playerX, exactRoomZ - playerZ);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+        } else {
+            Vec2 rotated = rotateVector(exactRoomX, exactRoomZ);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+        }
+
+        float[] triag = getRotatedTriangle(yaw + getMapRotationDegrees());
+        bufferBuilder.vertex(triag[0] + arrowX, triag[1] + arrowZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(triag[2] + arrowX, triag[3] + arrowZ, 0).color(color).endVertex();
+        bufferBuilder.vertex(triag[4] + arrowX, triag[5] + arrowZ, 0).color(color).endVertex();
+    }
+
+    private static float[] getRotatedTriangle(float yaw) { // returns three points that make a rotated triangle when added with mapx,z
+        double arrowScale = ClientConfig.ARROW_SCALE.get() * 0.03f * 0.7; // slightly smaller
+        double s = mapRoomWidth * arrowScale;
+        double x1 = 2.4 * s;
+        double y1 = 0;
+        double x2 = -1.2 * s;
+        double y2 = -1.6 * s;
+        double x3 = -1.2 * s;
+        double y3 = 1.6 * s;
+
+        // Shift triangle so the base center aligns with origin (player feet)
+        double baseCenterX = -1.2 * s;
+        x1 -= baseCenterX;
+        x2 -= baseCenterX;
+        x3 -= baseCenterX;
+
         float radangle = (float) Math.toRadians(yaw + 90);
 
-        double[] rotatedVert1 = rotatePoint(x1, y1, cx, cy, radangle);
-        double[] rotatedVert2 = rotatePoint(x2, y2, cx, cy, radangle);
-        double[] rotatedVert3 = rotatePoint(x3, y3, cx, cy, radangle);
+        double[] rotatedVert1 = rotatePoint(x1, y1, 0, 0, radangle);
+        double[] rotatedVert2 = rotatePoint(x2, y2, 0, 0, radangle);
+        double[] rotatedVert3 = rotatePoint(x3, y3, 0, 0, radangle);
 
-        var retlist = new ArrayList<Float>();
-        retlist.add((float) rotatedVert1[0] - (float)cx);
-        retlist.add((float) rotatedVert1[1] - (float)cy);
-        retlist.add((float) rotatedVert2[0] - (float)cx);
-        retlist.add((float) rotatedVert2[1] - (float)cy);
-        retlist.add((float) rotatedVert3[0] - (float)cx);
-        retlist.add((float) rotatedVert3[1] - (float)cy);
-        return retlist;
+        return new float[] {
+            (float) rotatedVert1[0], (float) rotatedVert1[1],
+            (float) rotatedVert2[0], (float) rotatedVert2[1],
+            (float) rotatedVert3[0], (float) rotatedVert3[1]
+        };
     }
 
     private static double[] rotatePoint(double x, double y, double cx, double cy, double angle) {
@@ -319,12 +470,101 @@ public class VaultMapOverlayRenderer {
         return !(playerCentricRender && (abs(cell.x - playerX) > cutoff || abs(cell.z - playerZ) > cutoff));
     }
 
+    private static boolean isLoadedUndiscoveredRoom(VaultCell cell) {
+        return cell.cellType == CellType.CELLTYPE_ROOM && !cell.explored && !cell.inscripted;
+    }
+
+    private static boolean isIdentifiedUndiscoveredNormalRoom(VaultCell cell) {
+        if (cell == null || cell.cellType != CellType.CELLTYPE_ROOM || cell.explored || cell.inscripted) {
+            return false;
+        }
+        if (isIdentifiedSpecialUndiscoveredRoom(cell)) {
+            return false;
+        }
+        return cell.roomName != null && !cell.roomName.isEmpty();
+    }
+
+    private static boolean isIdentifiedSpecialUndiscoveredRoom(VaultCell cell) {
+        if (cell == null || cell.explored || cell.cellType != CellType.CELLTYPE_ROOM) {
+            return false;
+        }
+
+        if (cell.roomType == RoomType.ROOMTYPE_CHALLENGE || cell.roomType == RoomType.ROOMTYPE_OMEGA) {
+            return true;
+        }
+
+        return cell.roomName != null && cell.roomName.toLowerCase().contains("boss");
+    }
+
+    private static void renderStyledCell(BufferBuilder bufferBuilder, VaultCell cell) {
+        int color = parseColor(VaultMap.getCellColor(cell));
+
+        if (!cell.explored && isIdentifiedSpecialUndiscoveredRoom(cell)) {
+            renderCell(bufferBuilder, cell, withAlpha(darken(color, 0.16f), 0.90f), 0.60f);
+            renderCell(bufferBuilder, cell, withAlpha(lighten(color, 0.06f), 0.98f), 0.52f);
+            return;
+        }
+
+        if (isIdentifiedUndiscoveredNormalRoom(cell)) {
+            int dimColor = parseColor(ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.get());
+            renderCell(bufferBuilder, cell, withAlpha(darken(dimColor, 0.20f), 0.62f), 0.76f);
+            renderCell(bufferBuilder, cell, withAlpha(lighten(dimColor, 0.08f), 0.74f), 0.60f);
+            return;
+        }
+
+        if (isLoadedUndiscoveredRoom(cell) && !isIdentifiedSpecialUndiscoveredRoom(cell)) {
+            int dimColor = blendColor(color, 0xFF7A8896, 0.7f);
+            renderCell(bufferBuilder, cell, withAlpha(darken(dimColor, 0.20f), 0.62f), 0.76f);
+            renderCell(bufferBuilder, cell, withAlpha(lighten(dimColor, 0.08f), 0.74f), 0.60f);
+            return;
+        }
+
+        renderCell(bufferBuilder, cell, withAlpha(darken(color, 0.16f), 0.90f), 1.0f);
+        if (cell.cellType == CellType.CELLTYPE_ROOM) {
+            renderCell(bufferBuilder, cell, withAlpha(lighten(color, 0.06f), 0.98f), 0.86f);
+        }
+    }
+
+    private static int withAlpha(int color, float alpha) {
+        int a = (int) (Math.max(0.0f, Math.min(1.0f, alpha)) * 255.0f);
+        return (color & 0x00FFFFFF) | (a << 24);
+    }
+
+    private static int blendColor(int from, int to, float ratio) {
+        float t = Math.max(0.0f, Math.min(1.0f, ratio));
+        int fr = (from >> 16) & 0xFF;
+        int fg = (from >> 8) & 0xFF;
+        int fb = from & 0xFF;
+
+        int tr = (to >> 16) & 0xFF;
+        int tg = (to >> 8) & 0xFF;
+        int tb = to & 0xFF;
+
+        int r = (int) (fr + (tr - fr) * t);
+        int g = (int) (fg + (tg - fg) * t);
+        int b = (int) (fb + (tb - fb) * t);
+
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
+    private static int darken(int color, float amount) {
+        return blendColor(color, 0xFF000000, amount);
+    }
+
+    private static int lighten(int color, float amount) {
+        return blendColor(color, 0xFFFFFFFF, amount);
+    }
+
     public static void renderCell(BufferBuilder bufferBuilder, VaultCell cell, int color) {
+        renderCell(bufferBuilder, cell, color, 1.0f);
+    }
+
+    public static void renderCell(BufferBuilder bufferBuilder, VaultCell cell, int color, float scale) {
         var cellCenter = getCellCenter(cell);
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
-        float roomWidth = mapRoomWidth / 2;
-        float tunnelLen = mapRoomWidth / 2;
+        float roomWidth = (mapRoomWidth / 2) * scale;
+        float tunnelLen = (mapRoomWidth / 2) * scale;
         float startX;
         float startZ;
         float endX;
@@ -375,6 +615,130 @@ public class VaultMapOverlayRenderer {
         renderBorder(bufferBuilder,color, minX, minZ, maxX, maxZ, 1/8f*mapRoomWidth);
     }
 
+    private static void renderGodAltarIndicatorDots(BufferBuilder bufferBuilder, VaultCell cell) {
+        List<Integer> dotColors = VaultMap.getRoomGodAltarIndicatorColors(cell);
+        List<net.minecraft.core.BlockPos> positions = VaultMap.getRoomGodAltarPositions(cell);
+        if (dotColors.isEmpty() || positions.isEmpty()) return;
+
+        float dotSize = Math.max(1.4f, mapRoomWidth * 0.12f);
+        for (int i = 0; i < positions.size() && i < dotColors.size(); i++) {
+            net.minecraft.core.BlockPos pos = positions.get(i);
+            float exactRoomX = (float) (pos.getX() / 47.0 - 0.5);
+            float exactRoomZ = (float) (pos.getZ() / 47.0 - 0.5);
+
+            float arrowX;
+            float arrowZ;
+            int offsetX = ClientConfig.MAP_X_OFFSET.get();
+            int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+            if (playerCentricRender) {
+                Vec2 rotated = rotateVector(exactRoomX - playerX, exactRoomZ - playerZ);
+                arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+                arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+            } else {
+                Vec2 rotated = rotateVector(exactRoomX, exactRoomZ);
+                arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+                arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+            }
+
+            float half = dotSize / 2.0f;
+            float x0 = arrowX - half;
+            float z0 = arrowZ - half;
+            float x1 = arrowX + half;
+            float z1 = arrowZ + half;
+            int color = withAlpha(dotColors.get(i), 0.95f);
+
+            bufferBuilder.vertex(x0, z1, 0).color(color).endVertex();
+            bufferBuilder.vertex(x1, z1, 0).color(color).endVertex();
+            bufferBuilder.vertex(x1, z0, 0).color(color).endVertex();
+            bufferBuilder.vertex(x0, z0, 0).color(color).endVertex();
+        }
+    }
+
+    private static void renderPylonIndicatorDots(BufferBuilder bufferBuilder, VaultCell cell) {
+        List<Integer> dotColors = VaultMap.getRoomPylonIndicatorColors(cell);
+        List<net.minecraft.core.BlockPos> positions = VaultMap.getRoomPylonPositions(cell);
+        List<String> pylonTypes = VaultMap.getRoomPylonTypes(cell);
+        if (dotColors.isEmpty() || positions.isEmpty()) return;
+
+        float dotSize = Math.max(1.2f, mapRoomWidth * 0.10f);
+        int offsetX = ClientConfig.MAP_X_OFFSET.get();
+        int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+
+        for (int i = 0; i < positions.size() && i < dotColors.size(); i++) {
+            net.minecraft.core.BlockPos pos = positions.get(i);
+            float exactRoomX = (float) (pos.getX() / 47.0 - 0.5);
+            float exactRoomZ = (float) (pos.getZ() / 47.0 - 0.5);
+
+            float arrowX;
+            float arrowZ;
+            if (playerCentricRender) {
+                Vec2 rotated = rotateVector(exactRoomX - playerX, exactRoomZ - playerZ);
+                arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+                arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+            } else {
+                Vec2 rotated = rotateVector(exactRoomX, exactRoomZ);
+                arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+                arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+            }
+
+            // Time pylons get a larger dot size to stand out
+            float finalDotSize = dotSize;
+            String pylonType = (i < pylonTypes.size()) ? pylonTypes.get(i) : null;
+            if ("time".equals(pylonType)) {
+                finalDotSize = dotSize * 1.5f; // 50% larger for time pylons
+            }
+
+            float half = finalDotSize / 2.0f;
+            float x0 = arrowX - half;
+            float z0 = arrowZ - half;
+            float x1 = arrowX + half;
+            float z1 = arrowZ + half;
+            int color = withAlpha(dotColors.get(i), 0.95f);
+
+            bufferBuilder.vertex(x0, z1, 0).color(color).endVertex();
+            bufferBuilder.vertex(x1, z1, 0).color(color).endVertex();
+            bufferBuilder.vertex(x1, z0, 0).color(color).endVertex();
+            bufferBuilder.vertex(x0, z0, 0).color(color).endVertex();
+        }
+    }
+
+    private static void renderCakeIndicatorDots(BufferBuilder bufferBuilder, VaultCell cell) {
+        List<Integer> dotColors = VaultMap.getRoomCakeIndicatorColors(cell);
+        List<net.minecraft.core.BlockPos> positions = VaultMap.getRoomCakePositions(cell);
+        if (dotColors.isEmpty() || positions.isEmpty()) return;
+
+        float dotSize = Math.max(1.6f, mapRoomWidth * 0.12f);
+        net.minecraft.core.BlockPos pos = positions.get(0);
+        float exactRoomX = (float) (pos.getX() / 47.0 - 0.5);
+        float exactRoomZ = (float) (pos.getZ() / 47.0 - 0.5);
+
+        int offsetX = ClientConfig.MAP_X_OFFSET.get();
+        int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+        float arrowX;
+        float arrowZ;
+        if (playerCentricRender) {
+            Vec2 rotated = rotateVector(exactRoomX - playerX, exactRoomZ - playerZ);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+        } else {
+            Vec2 rotated = rotateVector(exactRoomX, exactRoomZ);
+            arrowX = centerX + rotated.x * mapRoomWidth + offsetX;
+            arrowZ = centerZ + rotated.y * mapRoomWidth + offsetZ;
+        }
+
+        float half = dotSize / 2.0f;
+        float x0 = arrowX - half;
+        float z0 = arrowZ - half;
+        float x1 = arrowX + half;
+        float z1 = arrowZ + half;
+        int color = withAlpha(dotColors.get(0), 0.95f);
+
+        bufferBuilder.vertex(x0, z1, 0).color(color).endVertex();
+        bufferBuilder.vertex(x1, z1, 0).color(color).endVertex();
+        bufferBuilder.vertex(x1, z0, 0).color(color).endVertex();
+        bufferBuilder.vertex(x0, z0, 0).color(color).endVertex();
+    }
+
 
     public static void renderTextureCell(BufferBuilder bufferBuilder, VaultCell cell) {
         var cellCenter = getCellCenter(cell);
@@ -384,6 +748,9 @@ public class VaultMapOverlayRenderer {
         int crop = ClientConfig.ICON_CROP.get();
         float scale = (16.0f - 2 * crop) / 16.0f;
         float halfSize = mapRoomWidth * scale;
+        if (!cell.explored && isIdentifiedSpecialUndiscoveredRoom(cell)) {
+            halfSize *= getRoomIconSizeMultiplier(cell);
+        }
 
         float minX = mapX - halfSize;
         float maxX = mapX + halfSize;
@@ -489,20 +856,7 @@ public class VaultMapOverlayRenderer {
     }
 
     public static int parseColor(String hexColor) {
-        try {
-            if (hexColor.startsWith("#")) {
-                hexColor = hexColor.substring(1);
-            }
-
-            if (hexColor.length() == 6) {
-                hexColor = "FF" + hexColor;  // Add full opacity if not specified
-            }
-
-            // Cast to int to use it as a 32-bit ARGB color
-            return (int) Long.parseLong(hexColor, 16);
-        } catch (NumberFormatException e) {
-            return 0xFFFFFFFF; // Default color (white with full opacity)
-        }
+        return ColorUtil.parseHexColor(hexColor);
     }
 
     public static void prep() {
@@ -570,15 +924,63 @@ public class VaultMapOverlayRenderer {
 
     public static Vec2 getCellCenter(VaultCell cell) {
         if (playerCentricRender){
+            Vec2 rotated = rotateVector(cell.x - playerX, cell.z - playerZ);
             return new Vec2(
-                    centerX + (cell.x - playerX) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                    centerZ + (cell.z - playerZ) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                    centerX + rotated.x * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
+                    centerZ + rotated.y * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
             );
         }
+        Vec2 rotated = rotateVector(cell.x, cell.z);
         return new Vec2(
-                centerX + (cell.x) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                centerZ + (cell.z) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                centerX + rotated.x * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
+                centerZ + rotated.y * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
         );
     }
+
+    private static float getMapRotationDegrees() {
+        return VaultMap.getMapRotationQuarterTurns() * 90.0f;
+    }
+
+    private static Vec2 rotateVector(float x, float z) {
+        int turns = Math.floorMod(VaultMap.getMapRotationQuarterTurns(), 4);
+        return switch (turns) {
+            case 1 -> new Vec2(-z, x);
+            case 2 -> new Vec2(-x, -z);
+            case 3 -> new Vec2(z, -x);
+            default -> new Vec2(x, z);
+        };
+    }
+
+    private static void renderBossTypeLetter(PoseStack poseStack, VaultCell cell, String letter) {
+        Vec2 center = getCellCenter(cell);
+        float iconScale = getRoomIconSizeMultiplier(cell);
+        float iconHalfSize = mapRoomWidth * ((16.0f - 2 * ClientConfig.ICON_CROP.get()) / 16.0f) * iconScale;
+        float targetHeight = Math.max(5.0f, iconHalfSize * 1.05f);
+
+        var font = Minecraft.getInstance().font;
+        float textScale = targetHeight / Math.max(1.0f, font.lineHeight);
+
+        poseStack.pushPose();
+        poseStack.translate(center.x, center.y, 0);
+        poseStack.scale(textScale, textScale, 1.0f);
+
+        int baseY = -(font.lineHeight / 2);
+        GuiComponent.drawCenteredString(poseStack, font, letter, -1, baseY, 0xFF000000);
+        GuiComponent.drawCenteredString(poseStack, font, letter, 1, baseY, 0xFF000000);
+        GuiComponent.drawCenteredString(poseStack, font, letter, 0, baseY - 1, 0xFF000000);
+        GuiComponent.drawCenteredString(poseStack, font, letter, 0, baseY + 1, 0xFF000000);
+        GuiComponent.drawCenteredString(poseStack, font, letter, 0, baseY, 0xFFFFFFFF);
+
+        poseStack.popPose();
+    }
+
+    private static float getRoomIconSizeMultiplier(VaultCell cell) {
+        if (!cell.explored && isIdentifiedSpecialUndiscoveredRoom(cell)) {
+            int percent = ClientConfig.IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE.get();
+            return Math.max(0.30f, Math.min(1.0f, percent / 100.0f));
+        }
+        return 1.0f;
+    }
+
 
 }

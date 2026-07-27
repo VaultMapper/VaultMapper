@@ -1,6 +1,7 @@
 {
   "key.vaultmapper.mark": "Mark Current Room",
   "key.vaultmapper.togglemap": "Toggle Vault Map",
+  "key.vaultmapper.quicktogglemap": "Quick Toggle Map Visibility (Vault)",
   "key.vaultmapper.openconfig": "Open Config Screen",
   "key.vaultmapper.reconnectsync": "Restart VMSync (Debug)",
   "key.vaultmapper.toggleviewercode": "Toggle Viewer Code",

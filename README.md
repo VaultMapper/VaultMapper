@@ -13,4 +13,4 @@ This mod adds an on-screen minimap showing all the rooms you have explored in th
 
 The mod is currently fully client-sided, however you should get permission from server admins and other players before using it on a server.
 
-Development Discord Server: https://discord.gg/jq47BD9hS2
+Development Discord Server: <https://discord.gg/jq47BD9hS2>
