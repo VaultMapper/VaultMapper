@@ -100,21 +100,18 @@ public class VaultMapperConfigScreen extends Screen {
 
         int elHeight = getScaledY(1) / 2;
         int elWidth = 100;
-        width = 100;
-        elWidthColor = width - elHeight - 5;
+        elWidthColor = elWidth - elHeight - 5;
 
-        initToggles(elHeight);
+        initToggles(elHeight, elWidth);
         initSliders(elHeight, elWidth);
         initColorFields(elHeight, elWidth);
         initSyncFields(elHeight, elWidth);
         initSaveReset();
     }
 
-    private int elHeight;
-    private int width;
     private int elWidthColor;
 
-    private void initToggles(int elHeight) {
+    private void initToggles(int elHeight, int elWidth) {
         MutableComponent enabledText = new TextComponent("✔").withStyle(ChatFormatting.BOLD, ChatFormatting.GREEN);
         MutableComponent disabledText = new TextComponent("❌").withStyle(ChatFormatting.BOLD, ChatFormatting.RED);
 
@@ -155,7 +152,7 @@ public class VaultMapperConfigScreen extends Screen {
             }
         }
 
-        playerCentric = new Button(this.width / 2 + width + 15, getScaledY(4), elHeight, Math.min(elHeight, 20),  ClientConfig.PLAYER_CENTRIC_RENDERING.get() ? enabledText : disabledText, button -> {
+        playerCentric = new Button(this.width / 2 + elWidth + 15, getScaledY(4), elHeight, Math.min(elHeight, 20),  ClientConfig.PLAYER_CENTRIC_RENDERING.get() ? enabledText : disabledText, button -> {
             ClientConfig.PLAYER_CENTRIC_RENDERING.set(!ClientConfig.PLAYER_CENTRIC_RENDERING.get());
             ClientConfig.SPEC.save();
             button.setMessage(ClientConfig.PLAYER_CENTRIC_RENDERING.get() ? enabledText : disabledText);
