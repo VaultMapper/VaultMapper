@@ -9,6 +9,7 @@ public class ClientConfig {
     public static final ForgeConfigSpec.ConfigValue<Boolean> MAP_ENABLED;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_ROOM_TILE;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_SPECIAL_TEXT;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SHOW_FEATURE_MARKERS;
 
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_X_OFFSET;
     public static final ForgeConfigSpec.ConfigValue<Integer> MAP_Y_OFFSET;
@@ -64,6 +65,7 @@ public class ClientConfig {
         MAP_ENABLED = BUILDER.comment("Enable rendering the map").define("MAP_ENABLED", true);
         SHOW_ROOM_TILE = BUILDER.comment("Show the single-room tile overlay").define("SHOW_ROOM_TILE", true);
         SHOW_SPECIAL_TEXT = BUILDER.comment("Show special feature text overlay (brazier/cake/altar/pylon)").define("SHOW_SPECIAL_TEXT", true);
+        SHOW_FEATURE_MARKERS = BUILDER.comment("Show on-screen projected feature markers (dots at block positions)").define("SHOW_FEATURE_MARKERS", true);
 
         MAP_X_OFFSET = BUILDER.comment("Offset the Map from the default position (bottom right) on the x-axis").define("MAP_X_OFFSET", 0);
         MAP_Y_OFFSET = BUILDER.comment("Offset the Map from the default position (bottom right) on the y-axis").define("Map_Y_OFFSET", 0);
@@ -73,9 +75,9 @@ public class ClientConfig {
 
         ROOM_TILE_X_OFFSET = BUILDER.comment("Offset the Room Tile from its anchor on the x-axis").define("ROOM_TILE_X_OFFSET", 0);
         ROOM_TILE_Y_OFFSET = BUILDER.comment("Offset the Room Tile from its anchor on the y-axis").define("ROOM_TILE_Y_OFFSET", 0);
-        ROOM_TILE_X_ANCHOR = BUILDER.comment("Anchor the Room Tile on the x-axis (0-left, 2-center, 4-right)").define("ROOM_TILE_X_ANCHOR", 2);
-        ROOM_TILE_Y_ANCHOR = BUILDER.comment("Anchor the Room Tile on the y-axis (0-top, 2-center, 4-bottom)").define("ROOM_TILE_Y_ANCHOR", 2);
-        ROOM_TILE_SCALE = BUILDER.comment("Scale of the room tile, 3 to 30").define("ROOM_TILE_SCALE", 15);
+        ROOM_TILE_X_ANCHOR = BUILDER.comment("Anchor the Room Tile on the x-axis (0-left, 2-center, 4-right)").define("ROOM_TILE_X_ANCHOR", 0);
+        ROOM_TILE_Y_ANCHOR = BUILDER.comment("Anchor the Room Tile on the y-axis (0-top, 2-center, 4-bottom)").define("ROOM_TILE_Y_ANCHOR", 0);
+        ROOM_TILE_SCALE = BUILDER.comment("Size of the room tile in pixels, 20 to 200").define("ROOM_TILE_SCALE", 80);
 
         SPECIAL_TEXT_X_OFFSET = BUILDER.comment("Offset the Special Feature text from its anchor on the x-axis").define("SPECIAL_TEXT_X_OFFSET", 0);
         SPECIAL_TEXT_Y_OFFSET = BUILDER.comment("Offset the Special Feature text from its anchor on the y-axis").define("SPECIAL_TEXT_Y_OFFSET", 0);

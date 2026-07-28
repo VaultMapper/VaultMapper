@@ -93,6 +93,15 @@ public class VaultMapperConfigScreen extends Screen {
     private Button showViewerCodeButton;
     private Button loadedRoomScanButton;
     private Button mapEnabledButton;
+    private Button showRoomTileButton;
+    private Button showSpecialTextButton;
+    private Button showFeatureMarkersButton;
+    private Slider roomTileScale;
+    private EditBoxReset roomTileXOffset;
+    private EditBoxReset roomTileYOffset;
+    private Slider specialTextScale;
+    private EditBoxReset specialTextXOffset;
+    private EditBoxReset specialTextYOffset;
     private ColorPicker colorPicker;
 
     protected void init() {
@@ -106,6 +115,7 @@ public class VaultMapperConfigScreen extends Screen {
         initSliders(elHeight, elWidth);
         initColorFields(elHeight, elWidth);
         initSyncFields(elHeight, elWidth);
+        initOverlaySettings(elHeight, elWidth);
         initSaveReset();
     }
 
@@ -333,6 +343,56 @@ public class VaultMapperConfigScreen extends Screen {
         syncColor.setResponder((value) -> syncColorPicker.setColor(parseColor(value)));
     }
 
+    private void initOverlaySettings(int elHeight, int elWidth) {
+        int rightColX = this.width - 220;
+        int btnW = 210;
+        int toggleY = getScaledY(4);
+        float rowStep = 0.5f;
+
+        showRoomTileButton = new Button(rightColX, toggleY, btnW, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent("Room Tile: " + (ClientConfig.SHOW_ROOM_TILE.get() ? "On" : "Off")), button -> {
+            ClientConfig.SHOW_ROOM_TILE.set(!ClientConfig.SHOW_ROOM_TILE.get());
+            ClientConfig.SPEC.save();
+            button.setMessage(new TextComponent("Room Tile: " + (ClientConfig.SHOW_ROOM_TILE.get() ? "On" : "Off")));
+        });
+        this.addRenderableWidget(showRoomTileButton);
+
+        showSpecialTextButton = new Button(rightColX, getScaledY(4.5f), btnW, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent("Spec Text: " + (ClientConfig.SHOW_SPECIAL_TEXT.get() ? "On" : "Off")), button -> {
+            ClientConfig.SHOW_SPECIAL_TEXT.set(!ClientConfig.SHOW_SPECIAL_TEXT.get());
+            ClientConfig.SPEC.save();
+            button.setMessage(new TextComponent("Spec Text: " + (ClientConfig.SHOW_SPECIAL_TEXT.get() ? "On" : "Off")));
+        });
+        this.addRenderableWidget(showSpecialTextButton);
+
+        showFeatureMarkersButton = new Button(rightColX, getScaledY(5), btnW, Math.min((getScaledY(1) / 3) * 2, 20), new TextComponent("Feature Markers: " + (ClientConfig.SHOW_FEATURE_MARKERS.get() ? "On" : "Off")), button -> {
+            ClientConfig.SHOW_FEATURE_MARKERS.set(!ClientConfig.SHOW_FEATURE_MARKERS.get());
+            ClientConfig.SPEC.save();
+            button.setMessage(new TextComponent("Feature Markers: " + (ClientConfig.SHOW_FEATURE_MARKERS.get() ? "On" : "Off")));
+        });
+        this.addRenderableWidget(showFeatureMarkersButton);
+
+        roomTileScale = new Slider(rightColX, getScaledY(6), "Tile Size", ClientConfig.ROOM_TILE_SCALE.get(), 200, 20, v -> (int) v + "px", btnW, elHeight, 80);
+        this.addRenderableWidget(roomTileScale);
+
+        roomTileXOffset = new EditBoxReset(this.font, rightColX, getScaledY(7), btnW / 2 - 2, elHeight, new TextComponent("Tile X Off"), "0");
+        roomTileXOffset.setValue(ClientConfig.ROOM_TILE_X_OFFSET.get().toString());
+        this.addRenderableWidget(roomTileXOffset);
+
+        roomTileYOffset = new EditBoxReset(this.font, rightColX + btnW / 2 + 2, getScaledY(7), btnW / 2 - 2, elHeight, new TextComponent("Tile Y Off"), "0");
+        roomTileYOffset.setValue(ClientConfig.ROOM_TILE_Y_OFFSET.get().toString());
+        this.addRenderableWidget(roomTileYOffset);
+
+        specialTextScale = new Slider(rightColX, getScaledY(8), "Spec Scale", ClientConfig.SPECIAL_TEXT_SCALE.get(), 30, 3, v -> (int) v / 10.0f + "x", btnW, elHeight, 10);
+        this.addRenderableWidget(specialTextScale);
+
+        specialTextXOffset = new EditBoxReset(this.font, rightColX, getScaledY(9), btnW / 2 - 2, elHeight, new TextComponent("Spec X Off"), "0");
+        specialTextXOffset.setValue(ClientConfig.SPECIAL_TEXT_X_OFFSET.get().toString());
+        this.addRenderableWidget(specialTextXOffset);
+
+        specialTextYOffset = new EditBoxReset(this.font, rightColX + btnW / 2 + 2, getScaledY(9), btnW / 2 - 2, elHeight, new TextComponent("Spec Y Off"), "0");
+        specialTextYOffset.setValue(ClientConfig.SPECIAL_TEXT_Y_OFFSET.get().toString());
+        this.addRenderableWidget(specialTextYOffset);
+    }
+
     private void initSaveReset() {
         Button saveButton = new Button(this.width - 100 - 5, this.height - 20 - 5, 100,  20, new TextComponent("Save"), button -> {
             saveConfig();
@@ -379,6 +439,32 @@ public class VaultMapperConfigScreen extends Screen {
         ClientConfig.IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE.set(identifiedSpecialIconScale.sliderValue);
         ClientConfig.IDENTIFICATION_EXTRA_CELL_RADIUS.set(identificationExtraRadius.sliderValue);
         ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.set(identifiedUndiscoveredRoomColor.getValue());
+        ClientConfig.ROOM_TILE_SCALE.set(roomTileScale.sliderValue);
+        try {
+            ClientConfig.ROOM_TILE_X_OFFSET.set(Integer.parseInt(roomTileXOffset.getValue()));
+        } catch (NumberFormatException e) {
+            roomTileXOffset.setValue("2");
+            ClientConfig.ROOM_TILE_X_OFFSET.set(2);
+        }
+        try {
+            ClientConfig.ROOM_TILE_Y_OFFSET.set(Integer.parseInt(roomTileYOffset.getValue()));
+        } catch (NumberFormatException e) {
+            roomTileYOffset.setValue("2");
+            ClientConfig.ROOM_TILE_Y_OFFSET.set(2);
+        }
+        ClientConfig.SPECIAL_TEXT_SCALE.set(specialTextScale.sliderValue);
+        try {
+            ClientConfig.SPECIAL_TEXT_X_OFFSET.set(Integer.parseInt(specialTextXOffset.getValue()));
+        } catch (NumberFormatException e) {
+            specialTextXOffset.setValue("0");
+            ClientConfig.SPECIAL_TEXT_X_OFFSET.set(0);
+        }
+        try {
+            ClientConfig.SPECIAL_TEXT_Y_OFFSET.set(Integer.parseInt(specialTextYOffset.getValue()));
+        } catch (NumberFormatException e) {
+            specialTextYOffset.setValue("0");
+            ClientConfig.SPECIAL_TEXT_Y_OFFSET.set(0);
+        }
         ClientConfig.SPEC.save();
 
         VaultMapOverlayRenderer.prep();
@@ -453,6 +539,24 @@ public class VaultMapperConfigScreen extends Screen {
         ClientConfig.IDENTIFIED_SPECIAL_UNDISCOVERED_ICON_SCALE.set(60);
         ClientConfig.IDENTIFICATION_EXTRA_CELL_RADIUS.set(1);
         ClientConfig.IDENTIFIED_UNDISCOVERED_ROOM_COLOR.set("#7A8896");
+
+        showRoomTileButton.setMessage(enabledText);
+        showSpecialTextButton.setMessage(enabledText);
+        showFeatureMarkersButton.setMessage(enabledText);
+        roomTileScale.sliderValue = 80;
+        roomTileXOffset.setValue("0");
+        roomTileYOffset.setValue("0");
+        specialTextScale.sliderValue = 10;
+        specialTextXOffset.setValue("0");
+        specialTextYOffset.setValue("0");
+
+        ClientConfig.ROOM_TILE_SCALE.set(80);
+        ClientConfig.ROOM_TILE_X_OFFSET.set(0);
+        ClientConfig.ROOM_TILE_Y_OFFSET.set(0);
+        ClientConfig.SPECIAL_TEXT_SCALE.set(10);
+        ClientConfig.SPECIAL_TEXT_X_OFFSET.set(0);
+        ClientConfig.SPECIAL_TEXT_Y_OFFSET.set(0);
+        ClientConfig.SHOW_FEATURE_MARKERS.set(true);
         ClientConfig.SPEC.save();
 
         VaultMapOverlayRenderer.onWindowResize();
@@ -491,6 +595,10 @@ public class VaultMapperConfigScreen extends Screen {
         this.font.draw(pose, "VMSync", this.width / 2 - 110, getScaledY(19) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Sync Color", this.width / 2 - 110, getScaledY(20) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Identified Undisc Color", this.width / 2 - 110, getScaledY(21) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Tile Size", this.width - 220, getScaledY(6) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Tile Offset X / Y", this.width - 220, getScaledY(7) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Spec Scale", this.width - 220, getScaledY(8) + offsetY, 0xFFFFFFFF);
+        this.font.draw(pose, "Spec Offset X / Y", this.width - 220, getScaledY(9) + offsetY, 0xFFFFFFFF);
 
         super.render(pose, mouseX, mouseY, partialTick);
 

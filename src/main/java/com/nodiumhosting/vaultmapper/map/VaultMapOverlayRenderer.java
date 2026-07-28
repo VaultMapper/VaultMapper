@@ -103,20 +103,29 @@ public class VaultMapOverlayRenderer {
 
         BlockPos cakePos = VaultMap.getCurrentRoomCakePosition();
         if (cakePos != null) {
-            BearingIndicatorRenderer.render(event.getMatrixStack(), "Cake", cakePos);
+            VaultCell cell = VaultMap.getCurrentRoom();
+            int cakeColor = cell != null ? getFirstColor(VaultMap.getRoomCakeIndicatorColors(cell), 0xFF5555) : 0xFF5555;
+            BearingIndicatorRenderer.render(event.getMatrixStack(), "Cake", cakePos, cakeColor);
         }
 
         BlockPos brazierPos = VaultMap.getCurrentRoomBrazierPosition();
         if (brazierPos != null) {
-            BearingIndicatorRenderer.render(event.getMatrixStack(), "Brazier", brazierPos);
+            BearingIndicatorRenderer.render(event.getMatrixStack(), "Brazier", brazierPos, 0xFFAA00);
         }
 
-        for (BlockPos pos : VaultMap.getCurrentRoomGodAltarPositions()) {
-            BearingIndicatorRenderer.render(event.getMatrixStack(), "God Altar", pos);
-        }
+        VaultCell currentCell = VaultMap.getCurrentRoom();
+        if (currentCell != null) {
+            List<Integer> godColors = VaultMap.getRoomGodAltarIndicatorColors(currentCell);
+            List<BlockPos> altarPositions = VaultMap.getCurrentRoomGodAltarPositions();
+            for (int i = 0; i < altarPositions.size(); i++) {
+                int altarColor = (i < godColors.size()) ? (0xFF000000 | (godColors.get(i) & 0x00FFFFFF)) : 0xFFFFFFFF;
+                BearingIndicatorRenderer.render(event.getMatrixStack(), "God", altarPositions.get(i), altarColor);
+            }
 
-        for (BlockPos pos : VaultMap.getCurrentRoomPylonPositions()) {
-            BearingIndicatorRenderer.render(event.getMatrixStack(), "Pylon", pos);
+            List<BlockPos> pylonPositions = VaultMap.getCurrentRoomPylonPositions();
+            for (BlockPos pPos : pylonPositions) {
+                BearingIndicatorRenderer.render(event.getMatrixStack(), "Pylon", pPos, 0xFF55FFFF);
+            }
         }
 
         if (ClientConfig.SHOW_SPECIAL_TEXT.get()) {
@@ -880,6 +889,11 @@ public class VaultMapOverlayRenderer {
 
     public static int parseColor(String hexColor) {
         return ColorUtil.parseHexColor(hexColor);
+    }
+
+    private static int getFirstColor(List<Integer> colors, int defaultColor) {
+        if (colors == null || colors.isEmpty()) return defaultColor;
+        return 0xFF000000 | (colors.get(0) & 0x00FFFFFF);
     }
 
     public static void prep() {

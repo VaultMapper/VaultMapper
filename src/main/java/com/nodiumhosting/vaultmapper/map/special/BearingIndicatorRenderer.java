@@ -7,133 +7,101 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 public final class BearingIndicatorRenderer {
-    private static final int WAYPOINT_ARROW_SIZE = 8;
-    private static final int WAYPOINT_OFFSET = 10;
-    private static final int WAYPOINT_STACK_GAP = 14;
+    private static final float MAX_MARKER_DIST = 80.0f;
+    private static final float VIEW_CONE_DOT = (float) Math.cos(Math.toRadians(75));
 
     private BearingIndicatorRenderer() {
     }
 
-    public static void render(PoseStack poseStack, String label, BlockPos targetPos) {
-        if (!ClientConfig.SHOW_SPECIAL_TEXT.get()) return;
-        SpecialFeatureBearing bearing = SpecialFeatureBearingCalculator.calculate(targetPos);
-        if (bearing == null) return;
-
+    public static void render(PoseStack poseStack, String label, BlockPos targetPos, int color) {
         Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.level == null) return;
+        if (!ClientConfig.SHOW_FEATURE_MARKERS.get()) return;
+        if (targetPos == null) return;
+
+        Vec3 target = new Vec3(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5);
+        Vec3 camPos = mc.gameRenderer.getMainCamera().getPosition();
+        Vec3 toTarget = target.subtract(camPos);
+        float dist = (float) toTarget.length();
+
+        if (dist > MAX_MARKER_DIST || dist < 0.5f) return;
+
+        Vec3 lookVec = new Vec3(mc.gameRenderer.getMainCamera().getLookVector());
+        Vec3 normToTarget = toTarget.normalize();
+
+        float dotProduct = (float) lookVec.dot(normToTarget);
+        if (dotProduct < VIEW_CONE_DOT) return;
+
         int sw = mc.getWindow().getGuiScaledWidth();
         int sh = mc.getWindow().getGuiScaledHeight();
 
-        double angleRad = Math.toRadians(bearing.yawDegrees);
-        double cos = Math.cos(angleRad);
-        double sin = Math.sin(angleRad);
+        float fov = (float) mc.options.fov;
 
-        int edgeX, edgeY;
-        boolean onTopOrBottom;
+        if (fov <= 0) return;
 
-        double slope = (sin != 0) ? cos / sin : Double.MAX_VALUE;
+        double halfH = Math.tan(Math.toRadians(fov / 2.0));
+        double halfW = halfH * ((double) sw / sh);
 
-        double hDistToTop = (sin > 0) ? (sh / 2.0) / sin : Double.MAX_VALUE;
-        double hDistToBottom = (sin < 0) ? (-sh / 2.0) / sin : Double.MAX_VALUE;
-        double vDistToRight = (cos > 0) ? (sw / 2.0) / cos : Double.MAX_VALUE;
-        double vDistToLeft = (cos < 0) ? (-sw / 2.0) / cos : Double.MAX_VALUE;
+        Vec3 forward = lookVec;
+        Vec3 up = new Vec3(0, 1, 0);
+        Vec3 right = forward.cross(up).normalize();
+        Vec3 cameraUp = right.cross(forward).normalize();
 
-        double minDist = Math.min(Math.min(hDistToTop, hDistToBottom), Math.min(vDistToRight, vDistToLeft));
+        double dx = toTarget.dot(right);
+        double dy = toTarget.dot(cameraUp);
+        double dz = toTarget.dot(forward);
 
-        if (minDist == hDistToTop) {
-            edgeX = (int) (sw / 2.0 + cos * hDistToTop);
-            edgeY = WAYPOINT_OFFSET;
-            onTopOrBottom = true;
-        } else if (minDist == hDistToBottom) {
-            edgeX = (int) (sw / 2.0 + cos * hDistToBottom);
-            edgeY = sh - WAYPOINT_OFFSET;
-            onTopOrBottom = true;
-        } else if (minDist == vDistToRight) {
-            edgeX = sw - WAYPOINT_OFFSET;
-            edgeY = (int) (sh / 2.0 + sin * vDistToRight);
-            onTopOrBottom = false;
-        } else {
-            edgeX = WAYPOINT_OFFSET;
-            edgeY = (int) (sh / 2.0 + sin * vDistToLeft);
-            onTopOrBottom = false;
-        }
+        int screenX = (int) (sw / 2.0 + (dx / (halfW * dz)) * (sw / 2.0));
+        int screenY = (int) (sh / 2.0 - (dy / (halfH * dz)) * (sh / 2.0));
 
-        edgeX = Math.max(WAYPOINT_OFFSET, Math.min(sw - WAYPOINT_OFFSET, edgeX));
-        edgeY = Math.max(WAYPOINT_OFFSET, Math.min(sh - WAYPOINT_OFFSET, edgeY));
+        if (screenX < -50 || screenX > sw + 50 || screenY < -50 || screenY > sh + 50) return;
 
-        drawWaypointArrow(poseStack, edgeX, edgeY, angleRad, onTopOrBottom);
+        float yDiff = (float) (target.y - mc.player.getY());
+        int markerColor = (color & 0x00FFFFFF) | 0xCC000000;
 
-        int distColor = 0xFFFFFFFF;
-        String distText = String.format("%.0fm", bearing.distance);
-        var font = mc.font;
-
-        int textX = edgeX;
-        int textY = edgeY + (onTopOrBottom ? 10 : -10);
-        if (!onTopOrBottom) {
-            textY = edgeY + (sin > 0 ? 10 : -font.lineHeight - 4);
-        }
-
-        GuiComponent.drawCenteredString(poseStack, font, distText, textX, textY, distColor);
-
-        String heightChar = bearing.isAbove ? "\u25B2" : bearing.isBelow ? "\u25BC" : "\u25C6";
-        int heightColor = bearing.isAbove ? 0xFF55FF55 : bearing.isBelow ? 0xFFFF5555 : 0xFFFFDD55;
-        font.draw(poseStack, heightChar, textX + font.width(distText) / 2 + 2, textY, heightColor);
-    }
-
-    private static void drawWaypointArrow(PoseStack poseStack, int cx, int cy, double angleRad, boolean vertical) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
+        float dotRadius = Math.max(2.0f, Math.min(6.0f, 8.0f - dist * 0.06f));
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-
-        int color = 0xCCFFFFFF;
-
-        double tipX, tipY;
-        double leftX, leftY;
-        double rightX, rightY;
-
-        if (vertical) {
-            if (angleRad > -Math.PI / 2 && angleRad < Math.PI / 2) {
-                tipX = cx; tipY = cy - WAYPOINT_ARROW_SIZE;
-                leftX = cx - WAYPOINT_ARROW_SIZE; leftY = cy;
-                rightX = cx + WAYPOINT_ARROW_SIZE; rightY = cy;
-            } else {
-                tipX = cx; tipY = cy + WAYPOINT_ARROW_SIZE;
-                leftX = cx - WAYPOINT_ARROW_SIZE; leftY = cy;
-                rightX = cx + WAYPOINT_ARROW_SIZE; rightY = cy;
-            }
-        } else {
-            if (angleRad > 0 && angleRad < Math.PI) {
-                tipX = cx + WAYPOINT_ARROW_SIZE; tipY = cy;
-                leftX = cx; leftY = cy - WAYPOINT_ARROW_SIZE;
-                rightX = cx; rightY = cy + WAYPOINT_ARROW_SIZE;
-            } else {
-                tipX = cx - WAYPOINT_ARROW_SIZE; tipY = cy;
-                leftX = cx; leftY = cy - WAYPOINT_ARROW_SIZE;
-                rightX = cx; rightY = cy + WAYPOINT_ARROW_SIZE;
-            }
-        }
-
-        bufferBuilder.vertex((float) tipX, (float) tipY, 0).color(color).endVertex();
-        bufferBuilder.vertex((float) rightX, (float) rightY, 0).color(color).endVertex();
-        bufferBuilder.vertex((float) leftX, (float) leftY, 0).color(color).endVertex();
-
-        float stemLen = 3;
-        double stemEndX = cx + (cx - tipX) / WAYPOINT_ARROW_SIZE * stemLen;
-        double stemEndY = cy + (cy - tipY) / WAYPOINT_ARROW_SIZE * stemLen;
-        float sw = 1.5f;
-
-        bufferBuilder.vertex((float) stemEndX - sw, (float) stemEndY, 0).color(color).endVertex();
-        bufferBuilder.vertex((float) stemEndX + sw, (float) stemEndY, 0).color(color).endVertex();
-        bufferBuilder.vertex(cx - sw, cy, 0).color(color).endVertex();
-        bufferBuilder.vertex(cx + sw, cy, 0).color(color).endVertex();
-
+        bufferBuilder.vertex(screenX - dotRadius, screenY + dotRadius, 0).color(markerColor).endVertex();
+        bufferBuilder.vertex(screenX + dotRadius, screenY + dotRadius, 0).color(markerColor).endVertex();
+        bufferBuilder.vertex(screenX + dotRadius, screenY - dotRadius, 0).color(markerColor).endVertex();
+        bufferBuilder.vertex(screenX - dotRadius, screenY - dotRadius, 0).color(markerColor).endVertex();
         bufferBuilder.end();
         BufferUploader.end(bufferBuilder);
 
         RenderSystem.disableBlend();
+
+        var font = mc.font;
+        String distStr = String.format("%.0fm", dist);
+        int textColor = 0xFFFFFFFF;
+        int textX = screenX + (int) dotRadius + 3;
+        int textY = screenY - font.lineHeight / 2;
+        font.draw(poseStack, distStr, textX, textY, textColor);
+
+        String heightChar;
+        int heightColor;
+        if (yDiff > 1.5) { heightChar = "\u25B2"; heightColor = 0xFF55FF55; }
+        else if (yDiff < -1.5) { heightChar = "\u25BC"; heightColor = 0xFFFF5555; }
+        else { heightChar = "\u25C6"; heightColor = 0xFFFFDD55; }
+        font.draw(poseStack, heightChar, textX + font.width(distStr) + 2, textY, heightColor);
+
+        font.draw(poseStack, label, screenX - font.width(label) / 2, screenY - (int) dotRadius - font.lineHeight - 2, textColor);
+    }
+
+    private static int parseColor(String hexColor) {
+        if (hexColor == null || hexColor.isEmpty()) return 0xFF0000FF;
+        try {
+            long c = Long.decode(hexColor);
+            return 0xFF000000 | ((int) c & 0x00FFFFFF);
+        } catch (NumberFormatException e) {
+            return 0xFF0000FF;
+        }
     }
 }
