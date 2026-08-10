@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.proto.CellType;
+import com.nodiumhosting.vaultmapper.proto.RoomType;
 import com.nodiumhosting.vaultmapper.util.MapRoomIconUtil;
 import iskallia.vault.core.vault.ClientVaults;
 import iskallia.vault.core.vault.Vault;
@@ -28,10 +29,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static java.lang.Math.abs;
 
@@ -46,10 +44,13 @@ public class VaultMapOverlayRenderer {
     static boolean prepped = false;
     static float centerX;
     static float centerZ;
+    static int offsetX = ClientConfig.MAP_X_OFFSET.get();
+    static int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
     static float mapAnchorX = 0;
     static float mapAnchorZ = 0;
     static int playerX;
     static int playerZ;
+    static int iconCrop = ClientConfig.ICON_CROP.get();
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public static void eventHandler(RenderGameOverlayEvent.Post event) {
@@ -64,8 +65,9 @@ public class VaultMapOverlayRenderer {
         }
         if (!prepped) prep();
 
-        int offsetX = ClientConfig.MAP_X_OFFSET.get();
-        int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+        offsetX = ClientConfig.MAP_X_OFFSET.get();
+        offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+        iconCrop = ClientConfig.ICON_CROP.get();
 
         if (VaultMap.currentRoom != null) {
             playerX = VaultMap.currentRoom.x;
@@ -125,6 +127,8 @@ public class VaultMapOverlayRenderer {
         if (ClientConfig.SHOW_ROOM_ICONS.get()) {
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.disableBlend();
+
+            Map<ResourceLocation, List<VaultCell>> cellsByIcon = new HashMap<>();
             for (VaultCell vaultCell : VaultMap.cells) {
                 if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
                     continue;
@@ -137,17 +141,23 @@ public class VaultMapOverlayRenderer {
                 try {
                     ResourceLocation icon = MapRoomIconUtil.getIconForRoom(vaultCell.roomName);
                     if (icon == null) {
-                        VaultMapper.LOGGER.error("Icon {} not found for room: {}", icon, vaultCell.roomName);
+                        VaultMapper.LOGGER.error("Icon not found for room: {}",  vaultCell.roomName);
                         continue;
                     }
-                    RenderSystem.setShaderTexture(0, icon);
-                    bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-
-                    //Gui.blit(event.getMatrixStack(), (int) (centerX + cell.x * mapRoomWidth + offsetX), (int) (centerZ + cell.z * mapRoomWidth + offsetZ), 0, 0, (int) mapRoomWidth, (int) mapRoomWidth, 16, 16);
-                    //VaultMapper.LOGGER.info(String.valueOf(mapRoomWidth));
-                    renderTextureCell(bufferBuilder, vaultCell);
+                    cellsByIcon.computeIfAbsent(icon, key -> new ArrayList<>()).add(vaultCell);
                 } catch (Exception e) {
-                    VaultMapper.LOGGER.error("Failed to render icon for room: " + vaultCell.roomName);
+                    VaultMapper.LOGGER.error("Failed to get icon for room: {}", vaultCell.roomName, e);
+                }
+            }
+
+            for (Map.Entry<ResourceLocation, List<VaultCell>> entry : cellsByIcon.entrySet()) {
+                ResourceLocation icon = entry.getKey();
+
+                RenderSystem.setShaderTexture(0, icon);
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+                for (VaultCell vaultCell : entry.getValue()) {
+                    renderTextureCell(bufferBuilder, vaultCell);
                 }
 
                 bufferBuilder.end();
@@ -213,6 +223,7 @@ public class VaultMapOverlayRenderer {
             }
         }
     }
+
 
     private static void renderPlayerName(PoseStack posestack, String uuid, VaultMap.MapPlayer data) {
         int offsetX = ClientConfig.MAP_X_OFFSET.get();
@@ -363,8 +374,7 @@ public class VaultMapOverlayRenderer {
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
 
-        int crop = ClientConfig.ICON_CROP.get();
-        float scale = (16.0f - 2 * crop) / 16.0f;
+        float scale = (16.0f - 2 * iconCrop) / 16.0f;
         float halfSize = mapRoomWidth * scale;
 
         float minX = mapX - halfSize;
@@ -381,8 +391,7 @@ public class VaultMapOverlayRenderer {
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
 
-        int crop = ClientConfig.ICON_CROP.get();
-        float scale = (16.0f - 2 * crop) / 16.0f;
+        float scale = (16.0f - 2 * iconCrop) / 16.0f;
         float halfSize = mapRoomWidth * scale;
 
         float minX = mapX - halfSize;
@@ -390,8 +399,8 @@ public class VaultMapOverlayRenderer {
         float minZ = mapZ - halfSize;
         float maxZ = mapZ + halfSize;
 
-        float zeroOff = crop / 16f;
-        float oneOff = 1.0F - crop / 16f;
+        float zeroOff = iconCrop / 16f;
+        float oneOff = 1.0F - iconCrop / 16f;
 
         bufferBuilder.vertex(minX, maxZ, 0).uv(zeroOff, oneOff).endVertex();
         bufferBuilder.vertex(maxX, maxZ, 0).uv(oneOff, oneOff).endVertex();
@@ -571,13 +580,13 @@ public class VaultMapOverlayRenderer {
     public static Vec2 getCellCenter(VaultCell cell) {
         if (playerCentricRender){
             return new Vec2(
-                    centerX + (cell.x - playerX) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                    centerZ + (cell.z - playerZ) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                    centerX + (cell.x - playerX) * mapRoomWidth + offsetX,
+                    centerZ + (cell.z - playerZ) * mapRoomWidth + offsetZ
             );
         }
         return new Vec2(
-                centerX + (cell.x) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                centerZ + (cell.z) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                centerX + (cell.x) * mapRoomWidth + offsetX,
+                centerZ + (cell.z) * mapRoomWidth + offsetZ
         );
     }
 

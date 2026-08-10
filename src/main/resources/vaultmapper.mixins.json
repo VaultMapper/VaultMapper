@@ -10,6 +10,7 @@
     "FavoriteDisplayElementMixin",
     "InvokerContainerElement",
     "MixinVaultExitTabContainerElement",
+    "MixinVaultMapRoomIconsConfig",
     "OptionsScreenConfigButtonMixin",
     "PlayerTabOverlayMixin",
     "StructureTemplateAccessor",

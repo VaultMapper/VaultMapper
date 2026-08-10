@@ -3,6 +3,8 @@ package com.nodiumhosting.vaultmapper.util;
 import iskallia.vault.init.ModConfigs;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class MapRoomIconUtil {
@@ -38,10 +40,14 @@ public class MapRoomIconUtil {
         }
     }
 
+    public static Map<String, ResourceLocation> roomIconMap = new HashMap<>();
+
     public static ResourceLocation getIconForRoom(String roomName) {
         String path = roomName.toLowerCase();
-        ResourceLocation icon;
+        var existing = roomIconMap.get(path);
+        if (existing != null) return existing;
 
+        ResourceLocation icon;
 
         if (path.contains("start")) {
             icon = BaseIcons.ROOM_START.getResourceLocation();
@@ -103,6 +109,10 @@ public class MapRoomIconUtil {
             else {
                 icon = BaseIcons.ROOM_COMMON.getResourceLocation();
             }
+        }
+
+        if (icon != null) {
+            roomIconMap.put(path, icon);
         }
 
         return icon;
