@@ -44,10 +44,13 @@ public class VaultMapOverlayRenderer {
     static boolean prepped = false;
     static float centerX;
     static float centerZ;
+    static int offsetX = ClientConfig.MAP_X_OFFSET.get();
+    static int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
     static float mapAnchorX = 0;
     static float mapAnchorZ = 0;
     static int playerX;
     static int playerZ;
+    static int iconCrop = ClientConfig.ICON_CROP.get();
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public static void eventHandler(RenderGameOverlayEvent.Post event) {
@@ -62,8 +65,9 @@ public class VaultMapOverlayRenderer {
         }
         if (!prepped) prep();
 
-        int offsetX = ClientConfig.MAP_X_OFFSET.get();
-        int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+        offsetX = ClientConfig.MAP_X_OFFSET.get();
+        offsetZ = ClientConfig.MAP_Y_OFFSET.get();
+        iconCrop = ClientConfig.ICON_CROP.get();
 
         if (VaultMap.currentRoom != null) {
             playerX = VaultMap.currentRoom.x;
@@ -221,10 +225,6 @@ public class VaultMapOverlayRenderer {
     }
 
 
-    private void batchedLoop(){
-
-    }
-
     private static void renderPlayerName(PoseStack posestack, String uuid, VaultMap.MapPlayer data) {
         int offsetX = ClientConfig.MAP_X_OFFSET.get();
         int offsetZ = ClientConfig.MAP_Y_OFFSET.get();
@@ -374,8 +374,7 @@ public class VaultMapOverlayRenderer {
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
 
-        int crop = ClientConfig.ICON_CROP.get();
-        float scale = (16.0f - 2 * crop) / 16.0f;
+        float scale = (16.0f - 2 * iconCrop) / 16.0f;
         float halfSize = mapRoomWidth * scale;
 
         float minX = mapX - halfSize;
@@ -392,8 +391,7 @@ public class VaultMapOverlayRenderer {
         float mapX = cellCenter.x;
         float mapZ = cellCenter.y;
 
-        int crop = ClientConfig.ICON_CROP.get();
-        float scale = (16.0f - 2 * crop) / 16.0f;
+        float scale = (16.0f - 2 * iconCrop) / 16.0f;
         float halfSize = mapRoomWidth * scale;
 
         float minX = mapX - halfSize;
@@ -401,8 +399,8 @@ public class VaultMapOverlayRenderer {
         float minZ = mapZ - halfSize;
         float maxZ = mapZ + halfSize;
 
-        float zeroOff = crop / 16f;
-        float oneOff = 1.0F - crop / 16f;
+        float zeroOff = iconCrop / 16f;
+        float oneOff = 1.0F - iconCrop / 16f;
 
         bufferBuilder.vertex(minX, maxZ, 0).uv(zeroOff, oneOff).endVertex();
         bufferBuilder.vertex(maxX, maxZ, 0).uv(oneOff, oneOff).endVertex();
@@ -582,13 +580,13 @@ public class VaultMapOverlayRenderer {
     public static Vec2 getCellCenter(VaultCell cell) {
         if (playerCentricRender){
             return new Vec2(
-                    centerX + (cell.x - playerX) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                    centerZ + (cell.z - playerZ) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                    centerX + (cell.x - playerX) * mapRoomWidth + offsetX,
+                    centerZ + (cell.z - playerZ) * mapRoomWidth + offsetZ
             );
         }
         return new Vec2(
-                centerX + (cell.x) * mapRoomWidth + ClientConfig.MAP_X_OFFSET.get(),
-                centerZ + (cell.z) * mapRoomWidth + ClientConfig.MAP_Y_OFFSET.get()
+                centerX + (cell.x) * mapRoomWidth + offsetX,
+                centerZ + (cell.z) * mapRoomWidth + offsetZ
         );
     }
 
