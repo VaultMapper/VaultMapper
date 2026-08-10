@@ -123,8 +123,8 @@ public class VaultMapOverlayRenderer {
         if (ClientConfig.SHOW_ROOM_ICONS.get()) {
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.disableBlend();
-            renderRoomType(bufferBuilder, RoomType.ROOMTYPE_BASIC);
-            renderRoomType(bufferBuilder, RoomType.ROOMTYPE_ORE);
+
+            Map<ResourceLocation, List<VaultCell>> cellsByIcon = new HashMap<>();
             for (VaultCell vaultCell : VaultMap.cells) {
                 if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
                     continue;
@@ -134,24 +134,26 @@ public class VaultMapOverlayRenderer {
                     vaultCell.roomName = vaultCell.roomType.name();
                 }
 
-                if (vaultCell.roomType == RoomType.ROOMTYPE_BASIC || vaultCell.roomType == RoomType.ROOMTYPE_ORE) {
-                    continue;
-                }
-
                 try {
                     ResourceLocation icon = MapRoomIconUtil.getIconForRoom(vaultCell.roomName);
                     if (icon == null) {
-                        VaultMapper.LOGGER.error("Icon {} not found for room: {}", icon, vaultCell.roomName);
+                        VaultMapper.LOGGER.error("Icon not found for room: {}",  vaultCell.roomName);
                         continue;
                     }
-                    RenderSystem.setShaderTexture(0, icon);
-                    bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-
-                    //Gui.blit(event.getMatrixStack(), (int) (centerX + cell.x * mapRoomWidth + offsetX), (int) (centerZ + cell.z * mapRoomWidth + offsetZ), 0, 0, (int) mapRoomWidth, (int) mapRoomWidth, 16, 16);
-                    //VaultMapper.LOGGER.info(String.valueOf(mapRoomWidth));
-                    renderTextureCell(bufferBuilder, vaultCell);
+                    cellsByIcon.computeIfAbsent(icon, key -> new ArrayList<>()).add(vaultCell);
                 } catch (Exception e) {
-                    VaultMapper.LOGGER.error("Failed to render icon for room: " + vaultCell.roomName);
+                    VaultMapper.LOGGER.error("Failed to get icon for room: {}", vaultCell.roomName, e);
+                }
+            }
+
+            for (Map.Entry<ResourceLocation, List<VaultCell>> entry : cellsByIcon.entrySet()) {
+                ResourceLocation icon = entry.getKey();
+
+                RenderSystem.setShaderTexture(0, icon);
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+                for (VaultCell vaultCell : entry.getValue()) {
+                    renderTextureCell(bufferBuilder, vaultCell);
                 }
 
                 bufferBuilder.end();
@@ -219,44 +221,8 @@ public class VaultMapOverlayRenderer {
     }
 
 
-    /**
-     * Renders all rooms with the same texture (texture of the first room of specified type in the cell list)
-     */
-    private static void renderRoomType(BufferBuilder bufferBuilder, RoomType roomType){
-        ResourceLocation icon = null;
-        for (VaultCell vaultCell : VaultMap.cells) {
-            if (vaultCell.cellType != CellType.CELLTYPE_ROOM || !shouldRenderCell(vaultCell)) {
-                continue;
-            }
+    private void batchedLoop(){
 
-            if (vaultCell.roomName == null || vaultCell.roomName.isEmpty()) {
-                vaultCell.roomName = vaultCell.roomType.name();
-            }
-
-            if (vaultCell.roomType != roomType) {
-                continue;
-            }
-
-            try {
-                if (icon == null) {
-                    // first room => set texture
-                    icon = MapRoomIconUtil.getIconForRoom(vaultCell.roomName);
-                    if (icon == null) {
-                        VaultMapper.LOGGER.error("Icon {} not found for room: {}", icon, vaultCell.roomName);
-                        continue;
-                    }
-                    RenderSystem.setShaderTexture(0, icon);
-                    bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-                }
-                renderTextureCell(bufferBuilder, vaultCell);
-            } catch (Exception e) {
-                VaultMapper.LOGGER.error("Failed to render icon for room: " + vaultCell.roomName);
-            }
-        }
-        if (icon != null) {
-            bufferBuilder.end();
-            BufferUploader.end(bufferBuilder);
-        }
     }
 
     private static void renderPlayerName(PoseStack posestack, String uuid, VaultMap.MapPlayer data) {
