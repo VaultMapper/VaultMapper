@@ -4,7 +4,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.gui.component.*;
+import com.nodiumhosting.vaultmapper.map.VaultMap;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
+import com.nodiumhosting.vaultmapper.network.sync.ForgeSyncConnection;
+import com.nodiumhosting.vaultmapper.network.sync.ISyncConnection;
 import com.nodiumhosting.vaultmapper.util.Clamp;
 import com.nodiumhosting.vaultmapper.util.Util;
 import it.unimi.dsi.fastutil.Function;
@@ -437,6 +440,17 @@ public class VaultMapperConfigScreen extends Screen {
         this.font.draw(pose, "Resource Room Color", this.width / 2 - 110, getScaledY(18) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "VMSync", this.width / 2 - 110, getScaledY(19) + offsetY, 0xFFFFFFFF);
         this.font.draw(pose, "Sync Color", this.width / 2 - 110, getScaledY(20) + offsetY, 0xFFFFFFFF);
+
+        // which sync backend is (or would be) in use, under the sync server field
+        String syncStatus;
+        if (!ClientConfig.SYNC_ENABLED.get()) {
+            syncStatus = "Sync disabled";
+        } else {
+            ISyncConnection sync = VaultMap.syncClient;
+            boolean serverSide = sync instanceof ForgeSyncConnection || (sync == null && ForgeSyncConnection.isAvailable());
+            syncStatus = serverSide ? "Connected to dedicated server" : "Connected to public backend";
+        }
+        this.font.draw(pose, syncStatus, this.width / 2 - 70, getScaledY(19) + getScaledY(1) / 2 + 2, 0xFFAAAAAA);
 
         super.render(pose, mouseX, mouseY, partialTick);
 
