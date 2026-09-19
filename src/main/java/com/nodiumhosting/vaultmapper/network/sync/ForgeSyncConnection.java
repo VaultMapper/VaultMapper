@@ -12,11 +12,20 @@ import com.nodiumhosting.vaultmapper.proto.VaultPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 // transport type used for when connection to mc server with server-side mod installed
 public class ForgeSyncConnection implements ISyncConnection {
     private final String playerUUID;
     private final String vaultID;
     private boolean closed = false;
+
+    // cells are held back until the server sent its vault snapshot, so a connecting
+    // client can't overwrite the server's state with its own older state
+    private boolean syncReady = false;
+    private final List<VaultCell> pendingCells = new ArrayList<>();
 
     private boolean sentMove = false;
     private int oldX;
@@ -49,6 +58,26 @@ public class ForgeSyncConnection implements ISyncConnection {
 
     @Override
     public void sendCellPacket(VaultCell cell) {
+        if (!syncReady) {
+            pendingCells.add(cell);
+            return;
+        }
+        sendCellNow(cell);
+    }
+
+    // when the server's vault snapshot arrives - the client may only contribute
+    // cells the server doesn't know; server state always wins on conflicts
+    public void onVaultStateReceived(Set<String> serverCellKeys) {
+        syncReady = true;
+        for (VaultCell cell : pendingCells) {
+            if (!serverCellKeys.contains(cell.x + "," + cell.z)) {
+                sendCellNow(cell);
+            }
+        }
+        pendingCells.clear();
+    }
+
+    private void sendCellNow(VaultCell cell) {
         sendToServer(new C2SSyncPacket(Message.newBuilder()
                 .setType(MessageType.VAULT_CELL)
                 .setVaultCell(SyncPayloadHandler.cellToPacket(cell))

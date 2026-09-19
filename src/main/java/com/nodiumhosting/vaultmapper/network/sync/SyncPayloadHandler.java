@@ -9,6 +9,9 @@ import com.nodiumhosting.vaultmapper.proto.Color;
 import com.nodiumhosting.vaultmapper.proto.Message;
 import com.nodiumhosting.vaultmapper.util.Util;
 
+import java.util.HashSet;
+import java.util.Set;
+
 // client side handler for incoming messages
 // shared by both transport types
 public class SyncPayloadHandler {
@@ -16,10 +19,16 @@ public class SyncPayloadHandler {
         switch (msg.getType()) {
             case VAULT -> {
                 var data = msg.getVault();
+                Set<String> receivedCellKeys = new HashSet<>();
                 for (var cell : data.getCellsList()) {
                     VaultCell vaultCell = cellFromPacket(cell);
 
                     VaultMap.addOrReplaceCell(vaultCell);
+                    receivedCellKeys.add(vaultCell.x + "," + vaultCell.z);
+                }
+                // server snapshot applied - the forge connection may start sending cells now
+                if (VaultMap.syncClient instanceof ForgeSyncConnection syncConnection) {
+                    syncConnection.onVaultStateReceived(receivedCellKeys);
                 }
             }
             case VAULT_PLAYER -> {

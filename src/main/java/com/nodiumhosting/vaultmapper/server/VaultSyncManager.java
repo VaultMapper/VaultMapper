@@ -45,6 +45,8 @@ public class VaultSyncManager {
 
     private static final Map<String, SyncVault> vaults = new ConcurrentHashMap<>();
     private static final Map<UUID, String> playerVaults = new ConcurrentHashMap<>();
+    // ids of vaults with a save file on disk, built at startup - so joins don't touch the disk
+    private static final Set<String> vaultFilesOnDisk = ConcurrentHashMap.newKeySet();
 
     public static void handleJoin(ServerPlayer player, String vaultId) {
         if (player == null || !VAULT_ID_PATTERN.matcher(vaultId).matches()) {
@@ -219,12 +221,38 @@ public class VaultSyncManager {
             }
             return stale;
         });
-        sweepVaultFiles(now, retentionMs);
+        sweepIndexedVaultFiles(now, retentionMs);
     }
 
-    // prunes expired save files - including ones for vaults not currently loaded in memory
-    // (e.g. never rejoined after a restart) - and leftover temp files from crashed saves
-    private static void sweepVaultFiles(long now, long retentionMs) {
+    // prunes expired save files based on the on-disk vault index built at startup,
+    // skipping vaults currently loaded in memory - no directory scanning
+    private static void sweepIndexedVaultFiles(long now, long retentionMs) {
+        vaultFilesOnDisk.removeIf(vaultId -> {
+            if (vaults.containsKey(vaultId)) {
+                return false; // live vault, governed by the in-memory sweep above
+            }
+            try {
+                Path dir = getVaultDir();
+                if (dir == null) {
+                    return false;
+                }
+                Path file = dir.resolve(vaultId + ".dat");
+                if (now - Files.getLastModifiedTime(file).toMillis() > retentionMs) {
+                    VaultMapper.LOGGER.debug("Pruning vault sync save {}", vaultId);
+                    Files.deleteIfExists(file);
+                    return true;
+                }
+            } catch (java.nio.file.NoSuchFileException e) {
+                return true; // already gone - drop from the index
+            } catch (Exception e) {
+                VaultMapper.LOGGER.warn("Failed to prune vault sync save {}: {}", vaultId, e.toString());
+            }
+            return false;
+        });
+    }
+
+    // full directory scan - prunes expired save files and leftovers
+    private static void sweepVaultFilesOnDisk(long now, long retentionMs) {
         try {
             Path dir = getVaultDir();
             if (dir == null || !Files.isDirectory(dir)) {
@@ -287,12 +315,16 @@ public class VaultSyncManager {
             Path tmp = dir.resolve(vaultId + ".tmp");
             Files.write(tmp, bytes.toByteArray());
             Files.move(tmp, dir.resolve(vaultId + ".dat"), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            vaultFilesOnDisk.add(vaultId);
         } catch (Exception e) {
             VaultMapper.LOGGER.warn("Failed to save vault sync {}: {}", vaultId, e.toString());
         }
     }
 
     private static void loadVault(String vaultId, SyncVault vault) {
+        if (!vaultFilesOnDisk.contains(vaultId)) {
+            return; // no save on disk (per the startup index) - nothing to load
+        }
         try {
             Path dir = getVaultDir();
             if (dir == null) {
@@ -325,6 +357,26 @@ public class VaultSyncManager {
         } catch (Exception e) {
             VaultMapper.LOGGER.warn("Failed to delete vault sync save {}: {}", vaultId, e.toString());
         }
+        vaultFilesOnDisk.remove(vaultId);
+    }
+
+    // (re)builds the index of vault save files present on disk
+    private static void rebuildVaultFileIndex() {
+        vaultFilesOnDisk.clear();
+        try {
+            Path dir = getVaultDir();
+            if (dir == null || !Files.isDirectory(dir)) {
+                return;
+            }
+            try (var files = Files.list(dir)) {
+                files.map(file -> file.getFileName().toString())
+                        .filter(name -> name.endsWith(".dat"))
+                        .map(name -> name.substring(0, name.length() - ".dat".length()))
+                        .forEach(vaultFilesOnDisk::add);
+            }
+        } catch (Exception e) {
+            VaultMapper.LOGGER.warn("Failed to index vault sync saves: {}", e.toString());
+        }
     }
 
     @SubscribeEvent
@@ -339,7 +391,11 @@ public class VaultSyncManager {
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
-        sweepStaleVaults(); // prune expired save files left over from previous runs
+        long now = System.currentTimeMillis();
+        long retentionMs = Math.max(0, ServerConfig.EMPTY_VAULT_RETENTION_HOURS.get()) * 3_600_000L;
+        // prune expired save files left over from previous runs, then index what's left
+        sweepVaultFilesOnDisk(now, retentionMs);
+        rebuildVaultFileIndex();
     }
 
     // flushes queued movement updates when due - runs on the server thread like everything else here
@@ -365,6 +421,7 @@ public class VaultSyncManager {
         vaults.forEach(VaultSyncManager::saveVault);
         vaults.clear();
         playerVaults.clear();
+        vaultFilesOnDisk.clear();
     }
 
     private static class SyncVault {
