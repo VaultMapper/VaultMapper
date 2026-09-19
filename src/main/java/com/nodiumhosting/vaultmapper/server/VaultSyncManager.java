@@ -11,7 +11,9 @@ import com.nodiumhosting.vaultmapper.proto.Vault;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -72,7 +74,7 @@ public class VaultSyncManager {
                 .build();
         sendToPlayer(player, msg);
 
-        sweepEmptyVaults();
+        sweepStaleVaults();
     }
 
     public static void handleLeave(UUID playerUUID, String vaultId) {
@@ -103,14 +105,13 @@ public class VaultSyncManager {
         SyncVault vault = vaults.get(vaultId);
         switch (msg.getType()) {
             case VAULT_PLAYER -> {
-                if (vault != null && moveRateLimited(vault)) {
-                    return;
-                }
                 // enforce the real player uuid to prevent spoofing other players' arrows
                 Message relay = msg.toBuilder()
                         .setVaultPlayer(msg.getVaultPlayer().toBuilder().setUuid(uuid.toString()).build())
                         .build();
-                broadcast(vaultId, uuid, relay);
+                if (vault != null) {
+                    queueMoveRelay(vaultId, vault, uuid, relay);
+                }
             }
             case VAULT_CELL -> {
                 var cell = msg.getVaultCell();
@@ -124,21 +125,35 @@ public class VaultSyncManager {
         }
     }
 
-    // per vault rate limit on movement updates - paced evenly: at most one update per
-    // (1000 / limit) ms passes, extra updates get dropped (next one replaces them anyway).
-    // clients keep sending, so positions get sampled at the limit rate
-    private static boolean moveRateLimited(SyncVault vault) {
+    // per vault rate limit on movement updates, paced evenly: updates go into a per player
+    // queue (newest one always wins, nothing gets lost) and each due flush relays the
+    // latest queued state of every player - so relayed positions get sampled at the limit rate
+    private static void queueMoveRelay(String vaultId, SyncVault vault, UUID uuid, Message msg) {
+        vault.pendingMoves.put(uuid, msg);
+
+        long intervalNanos = moveIntervalNanos();
+        if (intervalNanos <= 0 || System.nanoTime() - vault.lastMoveRelayNanos >= intervalNanos) {
+            flushMoves(vaultId, vault);
+        }
+        // otherwise stays queued for the next due flush (chatty client) or the periodic tick flush
+    }
+
+    private static long moveIntervalNanos() {
         int maxPerSecond = ServerConfig.SYNC_RATE_LIMIT.get();
-        if (maxPerSecond <= 0) {
-            return false;
+        return maxPerSecond <= 0 ? 0 : 1_000_000_000L / maxPerSecond;
+    }
+
+    private static void flushMoves(String vaultId, SyncVault vault) {
+        if (vault.pendingMoves.isEmpty()) {
+            return;
         }
-        long intervalNanos = 1_000_000_000L / maxPerSecond;
-        long now = System.nanoTime();
-        if (now - vault.lastMoveRelayNanos < intervalNanos) {
-            return true;
-        }
-        vault.lastMoveRelayNanos = now;
-        return false;
+        vault.lastMoveRelayNanos = System.nanoTime();
+        vault.pendingMoves.forEach((uuid, msg) -> {
+            // atomic remove so a queued update is relayed exactly once
+            if (vault.pendingMoves.remove(uuid, msg)) {
+                broadcast(vaultId, uuid, msg);
+            }
+        });
     }
 
     // removes the player from whichever vault they are in, telling the remaining players
@@ -154,6 +169,7 @@ public class VaultSyncManager {
             return;
         }
         vault.players.remove(playerUUID);
+        vault.pendingMoves.remove(playerUUID); // don't let a queued position resurface after the disconnect broadcast
 
         Message msg = Message.newBuilder()
                 .setType(MessageType.PLAYER_DISCONNECT)
@@ -191,7 +207,7 @@ public class VaultSyncManager {
         VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new S2CSyncPacket(msg.toByteArray()));
     }
 
-    private static void sweepEmptyVaults() {
+    private static void sweepStaleVaults() {
         long now = System.currentTimeMillis();
         long retentionMs = Math.max(0, ServerConfig.EMPTY_VAULT_RETENTION_HOURS.get()) * 3_600_000L;
         vaults.entrySet().removeIf(entry -> {
@@ -203,6 +219,42 @@ public class VaultSyncManager {
             }
             return stale;
         });
+        sweepVaultFiles(now, retentionMs);
+    }
+
+    // prunes expired save files - including ones for vaults not currently loaded in memory
+    // (e.g. never rejoined after a restart) - and leftover temp files from crashed saves
+    private static void sweepVaultFiles(long now, long retentionMs) {
+        try {
+            Path dir = getVaultDir();
+            if (dir == null || !Files.isDirectory(dir)) {
+                return;
+            }
+            try (var files = Files.list(dir)) {
+                files.forEach(file -> {
+                    String name = file.getFileName().toString();
+                    boolean isTemp = name.endsWith(".tmp");
+                    boolean isVault = name.endsWith(".dat");
+                    if (!isTemp && !isVault) {
+                        return;
+                    }
+                    // vaults loaded in memory are governed by the in-memory sweep above
+                    if (isVault && vaults.containsKey(name.substring(0, name.length() - ".dat".length()))) {
+                        return;
+                    }
+                    try {
+                        if (now - Files.getLastModifiedTime(file).toMillis() > retentionMs) {
+                            VaultMapper.LOGGER.debug("Pruning vault sync save {}", name);
+                            Files.deleteIfExists(file);
+                        }
+                    } catch (Exception e) {
+                        VaultMapper.LOGGER.warn("Failed to prune vault sync save {}: {}", name, e.toString());
+                    }
+                });
+            }
+        } catch (Exception e) {
+            VaultMapper.LOGGER.warn("Failed to sweep vault sync saves: {}", e.toString());
+        }
     }
 
     // vaults are saved as a blob of: int32 format version + serialized Vault proto,
@@ -286,6 +338,29 @@ public class VaultSyncManager {
     }
 
     @SubscribeEvent
+    public static void onServerStarted(ServerStartedEvent event) {
+        sweepStaleVaults(); // prune expired save files left over from previous runs
+    }
+
+    // flushes queued movement updates when due - runs on the server thread like everything else here
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        long intervalNanos = moveIntervalNanos();
+        if (intervalNanos <= 0) {
+            return; // limit disabled - updates get flushed upon arrival
+        }
+        long now = System.nanoTime();
+        vaults.forEach((vaultId, vault) -> {
+            if (now - vault.lastMoveRelayNanos >= intervalNanos) {
+                flushMoves(vaultId, vault);
+            }
+        });
+    }
+
+    @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         vaults.forEach(VaultSyncManager::saveVault);
         vaults.clear();
@@ -295,6 +370,7 @@ public class VaultSyncManager {
     private static class SyncVault {
         final Set<UUID> players = ConcurrentHashMap.newKeySet();
         final Map<String, com.nodiumhosting.vaultmapper.proto.VaultCell> cells = new ConcurrentHashMap<>();
+        final Map<UUID, Message> pendingMoves = new ConcurrentHashMap<>();
         volatile long emptySince = 0;
         volatile long lastMoveRelayNanos = 0;
     }
