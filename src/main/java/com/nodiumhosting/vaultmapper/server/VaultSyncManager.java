@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 // serverside sync server - subset of public sync server without web viewer and stats
@@ -51,12 +52,12 @@ public class VaultSyncManager {
 
         removePlayer(uuid); // leave any vault the player was previously in
 
-        final boolean[] created = {false};
+        AtomicBoolean created = new AtomicBoolean(false);
         SyncVault vault = vaults.computeIfAbsent(vaultId, id -> {
-            created[0] = true;
+            created.set(true);
             return new SyncVault();
         });
-        if (created[0]) {
+        if (created.get()) {
             loadVault(vaultId, vault); // restore saved progress after e.g. a server restart
         }
         vault.emptySince = 0;
