@@ -9,6 +9,7 @@ import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
 import com.nodiumhosting.vaultmapper.network.VaultMapperChannel;
 import com.nodiumhosting.vaultmapper.util.UpdateChecker;
 import com.nodiumhosting.vaultmapper.util.Util;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -75,7 +76,7 @@ public class VaultMapper {
         VaultMapOverlayRenderer.prep();
     }
 
-    @Mod.EventBusSubscriber(modid = VaultMapper.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+    @Mod.EventBusSubscriber(modid = VaultMapper.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ModEventListener {
         @SubscribeEvent
         public static void registerClientCommands(RegisterClientCommandsEvent event) {
