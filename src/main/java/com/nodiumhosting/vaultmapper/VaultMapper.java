@@ -38,7 +38,7 @@ public class VaultMapper {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC, MODID + "-client.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC, MODID + "-server.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ServerConfig.SPEC, MODID + "-server.toml");
     }
 
     public static String getVersion() {

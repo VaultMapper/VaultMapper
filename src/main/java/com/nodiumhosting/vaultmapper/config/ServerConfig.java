@@ -13,7 +13,7 @@ public class ServerConfig {
         BUILDER.push("VaultMapper Server Config");
 
         SYNC_RATE_LIMIT = BUILDER.comment("The maximum number of player position updates synced per second per vault.\n" +
-                "Set to 0 to disable the rate limit.").define("SYNC_RATE_LIMIT", 4);
+                "Set to 0 to disable the rate limit.").define("SYNC_RATE_LIMIT", 10);
 
         EMPTY_VAULT_RETENTION_HOURS = BUILDER.comment("How many hours a vault is kept around (in memory and on disk) after its last player left.\n" +
                 "Set to 0 to forget vaults as soon as they are empty.").define("EMPTY_VAULT_RETENTION_HOURS", 72);
