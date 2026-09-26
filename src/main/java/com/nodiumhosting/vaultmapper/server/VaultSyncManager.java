@@ -4,10 +4,7 @@ import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ServerConfig;
 import com.nodiumhosting.vaultmapper.network.VaultMapperChannel;
 import com.nodiumhosting.vaultmapper.network.packets.S2CSyncPacket;
-import com.nodiumhosting.vaultmapper.proto.Message;
-import com.nodiumhosting.vaultmapper.proto.MessageType;
-import com.nodiumhosting.vaultmapper.proto.PlayerDisconnect;
-import com.nodiumhosting.vaultmapper.proto.Vault;
+import com.nodiumhosting.vaultmapper.proto.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
@@ -426,7 +423,7 @@ public class VaultSyncManager {
 
     private static class SyncVault {
         final Set<UUID> players = ConcurrentHashMap.newKeySet();
-        final Map<String, com.nodiumhosting.vaultmapper.proto.VaultCell> cells = new ConcurrentHashMap<>();
+        final Map<String, VaultCell> cells = new ConcurrentHashMap<>();
         final Map<UUID, Message> pendingMoves = new ConcurrentHashMap<>();
         volatile long emptySince = 0;
         volatile long lastMoveRelayNanos = 0;
