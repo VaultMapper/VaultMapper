@@ -19,29 +19,73 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class SyncClient extends WebSocketClient implements ISyncConnection {
+    private static final long TICK_MS = 2000;
+    private static final long KEEPALIVE_MS = 10000;
+    private static final long INITIAL_RETRY_MS = 2000;
+    private static final long MAX_RETRY_MS = 60000;
+    private static final long CONNECT_ATTEMPT_TIMEOUT_MS = 30000;
+
     private final Timer keepConnectedTimer = new Timer();
     private final SyncClient self;
     MovePacket old_data = new MovePacket("", "", 0, 0, 0);
-    private boolean keepMeOn = false;
+    private volatile boolean keepMeOn = true; // written on the main thread in closeGracefully(), read on the timer thread
+
+    // the fields below are only accessed on the timer thread
+    private boolean wasOpen = false;
+    private int retryAttempt = 0;
+    private long nextRetryAt = 0;
+    private long attemptStartedAt = System.currentTimeMillis();
+    private long lastKeepalive = 0;
 
     public SyncClient(String playerUUID, String vaultID) {
-        super(URI.create(ClientConfig.VMSYNC_SERVER.get() + "/?vaultID=" + vaultID + "&uuid=" + playerUUID)); //TODO: add check whether server is even online
+        super(URI.create(ClientConfig.VMSYNC_SERVER.get() + "/?vaultID=" + vaultID + "&uuid=" + playerUUID));
 
         self = this;
 
-        int timerPeriod = 10000;
         keepConnectedTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (keepMeOn) { // if connected
-                    if (self.isOpen()) { // if socket is open
-                        sendKeepalive();
+                try {
+                    if (!keepMeOn) return;
+                    boolean open = self.isOpen();
+                    if (open) {
+                        if (!wasOpen) {
+                            // just (re)connected - reset the backoff
+                            retryAttempt = 0;
+                            nextRetryAt = 0;
+                        }
+                        long now = System.currentTimeMillis();
+                        if (now - lastKeepalive >= KEEPALIVE_MS) {
+                            lastKeepalive = now;
+                            sendKeepalive();
+                        }
                     } else {
-                        self.reconnect(); // if socket closed, try to reconnect non-blocking
+                        long now = System.currentTimeMillis();
+                        if (self.isClosed() && now >= nextRetryAt) {
+                            // previous attempt failed - retry with exponential backoff
+                            retryConnection(now);
+                        } else if (!self.isClosing() && now - attemptStartedAt > CONNECT_ATTEMPT_TIMEOUT_MS) {
+                            // attempt in flight is stuck (e.g. server accepts TCP but never responds) - abort and retry
+                            retryConnection(now);
+                        }
+                        // otherwise an attempt is still in flight - let it finish
                     }
+                    wasOpen = open;
+                } catch (Exception e) {
+                    // keep the timer alive even if a tick fails
+                    VaultMapper.LOGGER.error("Sync WS keep-alive/reconnect error: " + e);
                 }
             }
-        }, timerPeriod, timerPeriod);
+
+            // timer thread only
+            private void retryConnection(long now) {
+                retryAttempt++;
+                long delay = Math.min(MAX_RETRY_MS, INITIAL_RETRY_MS * (1L << Math.min(retryAttempt - 1, 10)));
+                nextRetryAt = now + delay;
+                attemptStartedAt = now;
+                self.reconnect(); // non-blocking
+            }
+        }, TICK_MS, TICK_MS);
     }
 
     public void sendKeepalive() {
@@ -57,6 +101,7 @@ public class SyncClient extends WebSocketClient implements ISyncConnection {
 //        VaultMapper.LOGGER.info("Sync WS Connected");
         keepMeOn = true;
         VaultMapOverlayRenderer.syncErrorState = false;
+        // note: the retry backoff is reset on the timer thread when it next ticks (single-thread confinement)
     }
 
     @Override
