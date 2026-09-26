@@ -26,9 +26,10 @@ public class SyncPayloadHandler {
                     VaultMap.addOrReplaceCell(vaultCell);
                     receivedCellKeys.add(vaultCell.x + "," + vaultCell.z);
                 }
-                // server snapshot applied - the forge connection may start sending cells now
+                // snapshot chunk applied - the forge connection remembers these keys until
+                // the end packet completes the initial sync and releases held-back cells
                 if (VaultMap.syncClient instanceof ForgeSyncConnection syncConnection) {
-                    syncConnection.onVaultStateReceived(receivedCellKeys);
+                    syncConnection.onVaultChunkReceived(receivedCellKeys);
                 }
             }
             case VAULT_PLAYER -> {

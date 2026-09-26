@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -22,10 +23,12 @@ public class ForgeSyncConnection implements ISyncConnection {
     private final String vaultID;
     private boolean closed = false;
 
-    // cells are held back until the server sent its vault snapshot, so a connecting
+    // cells are held back until the server's vault snapshot is complete, so a connecting
     // client can't overwrite the server's state with its own older state
     private boolean syncReady = false;
     private final List<VaultCell> pendingCells = new ArrayList<>();
+    // cell keys seen across all snapshot chunks, applied when the end packet arrives
+    private final Set<String> serverCellKeys = new HashSet<>();
 
     private boolean sentMove = false;
     private int oldX;
@@ -45,6 +48,7 @@ public class ForgeSyncConnection implements ISyncConnection {
 
     @Override
     public void connect() {
+        serverCellKeys.clear();
         sendToServer(new C2SJoinVaultPacket(vaultID));
         VaultMapOverlayRenderer.syncErrorState = false;
     }
@@ -65,9 +69,15 @@ public class ForgeSyncConnection implements ISyncConnection {
         sendCellNow(cell);
     }
 
-    // when the server's vault snapshot arrives - the client may only contribute
-    // cells the server doesn't know; server state always wins on conflicts
-    public void onVaultStateReceived(Set<String> serverCellKeys) {
+    // a snapshot chunk arrived - its cells are already merged into the map by
+    // SyncPayloadHandler, here we only remember which cells the server already has
+    public void onVaultChunkReceived(Set<String> chunkCellKeys) {
+        serverCellKeys.addAll(chunkCellKeys);
+    }
+
+    // the server's vault snapshot is complete (end packet arrived) - the client may only
+    // contribute cells the server doesn't know; server state always wins on conflicts
+    public void onVaultStateReceived() {
         syncReady = true;
         for (VaultCell cell : pendingCells) {
             if (!serverCellKeys.contains(cell.x + "," + cell.z)) {
@@ -75,6 +85,7 @@ public class ForgeSyncConnection implements ISyncConnection {
             }
         }
         pendingCells.clear();
+        serverCellKeys.clear();
     }
 
     private void sendCellNow(VaultCell cell) {
