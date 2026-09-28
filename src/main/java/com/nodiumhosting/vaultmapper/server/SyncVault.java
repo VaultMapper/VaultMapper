@@ -11,12 +11,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// shared state of one live vault sync session: who is in it, the merged map, the queued
-// movement updates, and the disk-side bookkeeping for its journal + snapshot flushes.
+// shared state of one live vault sync session: who is in it, the merged map, the latest
+// player positions and queued movement updates, and the disk-side bookkeeping for its
+// journal + snapshot flushes.
 // everything is either a concurrent structure or is mutated strictly on the server thread
 class SyncVault {
     final Set<UUID> players = ConcurrentHashMap.newKeySet();
     final Map<String, VaultCell> cells = new ConcurrentHashMap<>();
+    final Map<UUID, Message> latestMoves = new ConcurrentHashMap<>();
     final Map<UUID, Message> pendingMoves = new ConcurrentHashMap<>();
     volatile long emptySince = 0;
     volatile long lastMoveRelayNanos = 0;

@@ -83,6 +83,13 @@ public class VaultSyncManager {
         // send all known cells to the joining player (like the external sync server does on
         // connect), chunked so the initial sync can't exceed the vanilla custom payload cap
         sendVaultSnapshot(player, vault);
+        // movement relays are transient; send the latest position of each existing player
+        // so their arrows appear even if they stay still after this player joins
+        vault.latestMoves.forEach((otherUUID, move) -> {
+            if (!otherUUID.equals(uuid)) {
+                sendToPlayer(player, move);
+            }
+        });
     }
 
     public static void handleLeave(UUID playerUUID, String vaultId) {
@@ -150,6 +157,7 @@ public class VaultSyncManager {
     // queue (newest one always wins, nothing gets lost) and each due flush relays the
     // latest queued state of every player - so relayed positions get sampled at the limit rate
     private static void queueMoveRelay(String vaultId, SyncVault vault, UUID uuid, Message msg) {
+        vault.latestMoves.put(uuid, msg);
         vault.pendingMoves.put(uuid, msg);
 
         long intervalNanos = moveIntervalNanos();
@@ -190,6 +198,7 @@ public class VaultSyncManager {
             return;
         }
         vault.players.remove(playerUUID);
+        vault.latestMoves.remove(playerUUID);
         vault.pendingMoves.remove(playerUUID); // don't let a queued position resurface after the disconnect broadcast
 
         Message msg = Message.newBuilder()
