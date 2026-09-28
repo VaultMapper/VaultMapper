@@ -3,6 +3,8 @@ package com.nodiumhosting.vaultmapper.map;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
 import com.nodiumhosting.vaultmapper.map.snapshots.MapCache;
+import com.nodiumhosting.vaultmapper.network.sync.ForgeSyncConnection;
+import com.nodiumhosting.vaultmapper.network.sync.ISyncConnection;
 import com.nodiumhosting.vaultmapper.network.sync.SyncClient;
 import com.nodiumhosting.vaultmapper.proto.CellType;
 import com.nodiumhosting.vaultmapper.proto.RoomType;
@@ -50,7 +52,7 @@ public class VaultMap {
     public static String viewerCode = "";
     public static boolean enabled;
     public static boolean debug;
-    public static SyncClient syncClient;
+    public static ISyncConnection syncClient;
     public static ConcurrentHashMap<String, MapPlayer> players = new ConcurrentHashMap<>();
     public static CopyOnWriteArrayList<VaultCell> cells = new CopyOnWriteArrayList<>();
     public static ConcurrentHashMap<CellCoordinate, VaultCell> cellCache = new ConcurrentHashMap<>();
@@ -99,7 +101,14 @@ public class VaultMap {
             syncClient = null;
         }
         VaultMap.viewerCode = "";
-        syncClient = new SyncClient(playerUUID, dimName);
+        if (ForgeSyncConnection.isAvailable()) {
+            // the connected Minecraft server has the VaultMapper mod installed - sync through it
+            VaultMapper.LOGGER.info("Using server side VaultMapper sync for " + dimName);
+            syncClient = new ForgeSyncConnection(playerUUID, dimName);
+        } else {
+            // otherwise fall back to the external sync server
+            syncClient = new SyncClient(playerUUID, dimName);
+        }
         syncClient.connect();
 
         for (VaultCell cell : cellCache.values()) {
