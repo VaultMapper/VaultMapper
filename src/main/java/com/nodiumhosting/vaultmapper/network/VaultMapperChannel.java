@@ -1,14 +1,14 @@
 package com.nodiumhosting.vaultmapper.network;
 
 import com.nodiumhosting.vaultmapper.VaultMapper;
+import com.nodiumhosting.vaultmapper.network.packets.C2SCellUpdatePacket;
 import com.nodiumhosting.vaultmapper.network.packets.C2SJoinVaultPacket;
 import com.nodiumhosting.vaultmapper.network.packets.C2SLeaveVaultPacket;
 import com.nodiumhosting.vaultmapper.network.packets.C2SSyncPacket;
-import com.nodiumhosting.vaultmapper.network.packets.S2CSyncPacket;
-import com.nodiumhosting.vaultmapper.network.packets.S2CVaultSyncEndPacket;
-import com.nodiumhosting.vaultmapper.network.packets.C2SCellUpdatePacket;
 import com.nodiumhosting.vaultmapper.network.packets.S2CCellAckPacket;
 import com.nodiumhosting.vaultmapper.network.packets.S2CCellStreamResetPacket;
+import com.nodiumhosting.vaultmapper.network.packets.S2CSyncPacket;
+import com.nodiumhosting.vaultmapper.network.packets.S2CVaultSyncEndPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -19,7 +19,7 @@ import java.util.Optional;
 // channel for forge network transport type
 // optional, mod falls back to public backend if needed
 public class VaultMapperChannel {
-    private static final String PROTOCOL_VERSION = "3"; // sequenced, durably acknowledged cell batches
+    private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(VaultMapper.MODID, "sync"),
             () -> PROTOCOL_VERSION,
