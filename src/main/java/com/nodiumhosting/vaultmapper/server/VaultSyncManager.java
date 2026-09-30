@@ -5,6 +5,10 @@ import com.nodiumhosting.vaultmapper.config.ServerConfig;
 import com.nodiumhosting.vaultmapper.network.VaultMapperChannel;
 import com.nodiumhosting.vaultmapper.network.packets.S2CSyncPacket;
 import com.nodiumhosting.vaultmapper.network.packets.S2CVaultSyncEndPacket;
+import com.nodiumhosting.vaultmapper.network.packets.S2CCellAckPacket;
+import com.nodiumhosting.vaultmapper.network.packets.S2CCellStreamResetPacket;
+import com.nodiumhosting.vaultmapper.network.packets.C2SCellUpdatePacket;
+import com.google.protobuf.UnknownFieldSet;
 import com.nodiumhosting.vaultmapper.proto.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,7 +23,11 @@ import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
@@ -44,16 +52,14 @@ public class VaultSyncManager {
     // legit room names are short resource locations - anything longer is a broken or malicious client
     private static final int MAX_ROOM_NAME_LENGTH = 256;
 
-    // size budget per initial-sync snapshot chunk - keeps every chunk far below the vanilla
-    // custom payload cap (1 MiB) no matter how large a vault grows
-    private static final int INITIAL_SYNC_CHUNK_BYTES = 256 * 1024;
-
     private static final Map<String, SyncVault> vaults = new ConcurrentHashMap<>();
     private static final Map<UUID, String> playerVaults = new ConcurrentHashMap<>();
+    private static final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
+    private static final Map<UUID, UUID> playerSources = new ConcurrentHashMap<>();
 
     private static volatile long lastHousekeepingMillis = 0;
 
-    public static void handleJoin(ServerPlayer player, String vaultId) {
+    public static void handleJoin(ServerPlayer player, String vaultId, UUID sessionId) {
         if (player == null || !VAULT_ID_PATTERN.matcher(vaultId).matches()) {
             return;
         }
@@ -64,42 +70,64 @@ public class VaultSyncManager {
         AtomicBoolean created = new AtomicBoolean(false);
         SyncVault vault = vaults.computeIfAbsent(vaultId, id -> {
             created.set(true);
-            return new SyncVault();
+            SyncVault session = new SyncVault();
+            session.loaded = false;
+            return session;
         });
-        if (created.get()) {
-            // restore saved progress after e.g. a server restart
-            int journaled = VaultSaveStore.loadVault(vaultId, vault);
-            if (journaled > 0) {
-                // journaled data isn't in the snapshot (or the snapshot is gone entirely) -
-                // have the next housekeeping run fold it in
-                vault.walPending = WAL_FLUSH_THRESHOLD;
-            }
-        }
         vault.emptySince = 0;
         vault.players.add(uuid);
+        vault.awaitingSnapshot.add(uuid);
         playerVaults.put(uuid, vaultId);
+        playerSessions.put(uuid, sessionId);
         VaultMapper.LOGGER.debug("Player {} joined vault sync {}", uuid, vaultId);
 
-        // send all known cells to the joining player (like the external sync server does on
-        // connect), chunked so the initial sync can't exceed the vanilla custom payload cap
-        sendVaultSnapshot(player, vault);
-        // movement relays are transient; send the latest position of each existing player
-        // so their arrows appear even if they stay still after this player joins
-        vault.latestMoves.forEach((otherUUID, move) -> {
-            if (!otherUUID.equals(uuid)) {
-                sendToPlayer(player, move);
+        if (created.get()) {
+            startLoad(vaultId, vault, player.getServer());
+        } else if (vault.loaded) {
+            sendWaitingSnapshots(vaultId, vault, player.getServer());
+        }
+    }
+
+    private static void startLoad(String vaultId, SyncVault vault, MinecraftServer server) {
+        vault.loadInFlight = true;
+        VaultSaveStore.loadAsync(vaultId, vault).whenComplete((journaled, failure) -> server.execute(() -> {
+            // Do not revive an old session after expiry or a server restart.
+            if (ServerLifecycleHooks.getCurrentServer() != server || vaults.get(vaultId) != vault) {
+                return;
+            }
+            vault.loadInFlight = false;
+            if (failure != null) {
+                vault.nextLoadAllowedMillis = System.currentTimeMillis() + HOUSEKEEPING_INTERVAL_MS;
+                VaultMapper.LOGGER.warn("Failed to recover vault sync {}: {}", vaultId, failure.toString());
+                return;
+            }
+            vault.loaded = true;
+            sendWaitingSnapshots(vaultId, vault, server);
+        }));
+    }
+
+    private static void sendWaitingSnapshots(String vaultId, SyncVault vault, MinecraftServer server) {
+        vault.awaitingSnapshot.forEach(uuid -> {
+            if (!vaultId.equals(playerVaults.get(uuid))) {
+                vault.awaitingSnapshot.remove(uuid);
+                return;
+            }
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+            if (player != null && !vault.initialSyncs.containsKey(uuid)) {
+                sendVaultSnapshot(player, vaultId, vault);
             }
         });
     }
 
-    public static void handleLeave(UUID playerUUID, String vaultId) {
-        if (playerUUID == null || !vaultId.equals(playerVaults.get(playerUUID))) {
+    public static void handleLeave(UUID playerUUID, String vaultId, UUID sessionId) {
+        if (playerUUID == null || !vaultId.equals(playerVaults.get(playerUUID))
+                || !sessionId.equals(playerSessions.get(playerUUID))) {
             return;
         }
         removePlayer(playerUUID);
     }
 
-    public static void handlePayload(ServerPlayer player, byte[] data) {
+    public static void handlePayload(ServerPlayer player, UUID sessionId, byte[] data) {
         if (player == null) {
             return;
         }
@@ -109,7 +137,7 @@ public class VaultSyncManager {
         }
         UUID uuid = player.getUUID();
         String vaultId = playerVaults.get(uuid);
-        if (vaultId == null) {
+        if (vaultId == null || !sessionId.equals(playerSessions.get(uuid))) {
             return; // not subscribed to any vault - ignore
         }
 
@@ -132,25 +160,65 @@ public class VaultSyncManager {
                     queueMoveRelay(vaultId, vault, uuid, relay);
                 }
             }
-            case VAULT_CELL -> {
-                var cell = msg.getVaultCell();
-                if (Math.abs(cell.getX()) > MAX_CELL_COORDINATE || Math.abs(cell.getZ()) > MAX_CELL_COORDINATE) {
-                    VaultMapper.LOGGER.warn("Dropping out-of-bounds vault cell {},{} from {}", cell.getX(), cell.getZ(), uuid);
-                    break;
-                }
-                if (cell.getRoomName().length() > MAX_ROOM_NAME_LENGTH) {
-                    VaultMapper.LOGGER.warn("Dropping vault cell {},{} from {} with an oversized room name ({} chars)",
-                            cell.getX(), cell.getZ(), uuid, cell.getRoomName().length());
-                    break;
-                }
-                if (vault != null) {
-                    vault.cells.put(SyncVault.cellKey(cell), cell);
-                    VaultSaveStore.appendCell(vaultId, vault, cell);
-                }
-                broadcast(vaultId, uuid, msg);
-            }
             default -> VaultMapper.LOGGER.debug("Ignoring sync payload of type {} from {}", msg.getType(), uuid);
         }
+    }
+
+    public static void handleCellUpdate(ServerPlayer player, UUID session, UUID source, long sequence, byte[] data) {
+        if (player == null || sequence <= 0 || data.length > C2SCellUpdatePacket.MAX_DATA_BYTES) return;
+        UUID uuid = player.getUUID();
+        String vaultId = playerVaults.get(uuid);
+        if (vaultId == null || !session.equals(playerSessions.get(uuid))) return;
+        UUID boundSource = playerSources.putIfAbsent(uuid, source);
+        if (boundSource != null && !source.equals(boundSource)) return;
+        SyncVault vault = vaults.get(vaultId);
+        if (vault == null || !vault.loaded || vault.awaitingSnapshot.contains(uuid)) return;
+        long committed = vault.durableReceipts.getOrDefault(source, 0L);
+        if (sequence <= committed) {
+            sendAck(player, session, source, sequence); // retry after a lost ack/restart
+            return;
+        }
+        if (vault.pendingWrites.containsKey(source)) return;
+        if (vault.needsStreamReset(source, sequence)) {
+            UUID newSource = UUID.randomUUID();
+            playerSources.put(uuid, newSource);
+            VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                    new S2CCellStreamResetPacket(session, source, sequence, newSource));
+            return;
+        }
+        if (sequence != committed + 1 || !vault.acceptsSource(source)) return;
+        final List<VaultCell> cells;
+        try {
+            Vault batch = Vault.parseFrom(data);
+            if (batch.getCellsCount() == 0 || batch.getCellsCount() > 128) return;
+            for (VaultCell cell : batch.getCellsList()) {
+                if (Math.abs((long) cell.getX()) > MAX_CELL_COORDINATE || Math.abs((long) cell.getZ()) > MAX_CELL_COORDINATE
+                        || cell.getRoomName().length() > MAX_ROOM_NAME_LENGTH) return;
+            }
+            cells = batch.getCellsList().stream().map(cell -> cell.toBuilder()
+                    .setUnknownFields(UnknownFieldSet.getDefaultInstance()).build()).toList();
+        } catch (Exception e) {
+            return;
+        }
+        if (vault.acceptedSequences.getOrDefault(source, 0L) < sequence) {
+            vault.acceptedSequences.put(source, sequence);
+            cells.forEach(cell -> {
+                vault.putCell(cell);
+                broadcast(vaultId, uuid, Message.newBuilder().setType(MessageType.VAULT_CELL).setVaultCell(cell).build());
+            });
+        }
+        MinecraftServer server = player.getServer();
+        var write = VaultSaveStore.appendUpdate(vaultId, vault, source, sequence, cells, VaultSaveStore.getVaultDir());
+        vault.pendingWrites.put(source, write);
+        write.whenComplete((value, failure) -> server.execute(() -> {
+            if (ServerLifecycleHooks.getCurrentServer() != server || vaults.get(vaultId) != vault) return;
+            vault.pendingWrites.remove(source, write);
+            if (failure == null && session.equals(playerSessions.get(uuid))) sendAck(player, session, source, sequence);
+        }));
+    }
+
+    private static void sendAck(ServerPlayer player, UUID session, UUID source, long sequence) {
+        VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new S2CCellAckPacket(session, source, sequence));
     }
 
     // per vault rate limit on movement updates, paced evenly: updates go into a per player
@@ -188,6 +256,8 @@ public class VaultSyncManager {
     // removes the player from whichever vault they are in, telling the remaining players
     private static void removePlayer(UUID playerUUID) {
         String vaultId = playerVaults.remove(playerUUID);
+        playerSessions.remove(playerUUID);
+        playerSources.remove(playerUUID);
         if (vaultId == null) {
             return;
         }
@@ -198,6 +268,9 @@ public class VaultSyncManager {
             return;
         }
         vault.players.remove(playerUUID);
+        vault.awaitingSnapshot.remove(playerUUID);
+        VaultSnapshotTransfer transfer = vault.initialSyncs.remove(playerUUID);
+        if (transfer != null) transfer.cancelled = true;
         vault.latestMoves.remove(playerUUID);
         vault.pendingMoves.remove(playerUUID); // don't let a queued position resurface after the disconnect broadcast
 
@@ -221,71 +294,95 @@ public class VaultSyncManager {
         if (server == null) {
             return;
         }
-        S2CSyncPacket packet = new S2CSyncPacket(msg.toByteArray());
+        byte[] data = msg.toByteArray();
         for (UUID uuid : vault.players) {
             if (uuid.equals(excludeUUID)) {
                 continue;
             }
+            if (vault.awaitingSnapshot.contains(uuid)) {
+                VaultSnapshotTransfer transfer = vault.initialSyncs.get(uuid);
+                if (transfer != null && msg.getType() == MessageType.VAULT_CELL) {
+                    transfer.record(msg.getVaultCell(), data);
+                }
+                continue;
+            }
             ServerPlayer target = server.getPlayerList().getPlayer(uuid);
             if (target != null) {
-                VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), packet);
+                VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> target),
+                        new S2CSyncPacket(playerSessions.get(uuid), data));
             }
         }
     }
 
     private static void sendToPlayer(ServerPlayer player, Message msg) {
-        VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new S2CSyncPacket(msg.toByteArray()));
+        VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new S2CSyncPacket(playerSessions.get(player.getUUID()), msg.toByteArray()));
     }
 
-    // sends the vault's cells as a series of VAULT snapshot chunks followed by an end packet
-    // (S2CVaultSyncEndPacket) - chunked so a huge vault can't produce a packet above the
-    // vanilla custom payload cap, which would disconnect the joining player
-    private static void sendVaultSnapshot(ServerPlayer player, SyncVault vault) {
-        Vault.Builder chunk = Vault.newBuilder();
-        int chunkBytes = 0;
-        int totalCells = 0;
-        for (VaultCell cell : vault.cells.values()) {
-            int cellBytes = cell.getSerializedSize();
-            // flush the chunk before adding a cell that would overflow it, so an oversized
-            // cell always lands alone in its own chunk (still well under the cap thanks to
-            // the room name limit)
-            if (chunkBytes > 0 && chunkBytes + cellBytes > INITIAL_SYNC_CHUNK_BYTES) {
-                sendToPlayer(player, chunkMessage(chunk));
-                chunk = Vault.newBuilder();
-                chunkBytes = 0;
-            }
-            chunk.addCells(cell);
-            chunkBytes += cellBytes;
-            totalCells++;
-        }
-        if (chunk.getCellsCount() > 0) {
-            sendToPlayer(player, chunkMessage(chunk));
-        }
-        VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new S2CVaultSyncEndPacket(totalCells));
-    }
-
-    private static Message chunkMessage(Vault.Builder chunk) {
-        return Message.newBuilder()
-                .setType(MessageType.VAULT)
-                .setVault(chunk.build())
-                .build();
+    private static void sendVaultSnapshot(ServerPlayer player, String vaultId, SyncVault vault) {
+        MinecraftServer server = player.getServer();
+        UUID uuid = player.getUUID();
+        UUID session = playerSessions.get(uuid);
+        VaultSnapshotTransfer transfer = new VaultSnapshotTransfer();
+        vault.initialSyncs.put(uuid, transfer);
+        VaultIoQueue.independent(VaultSnapshotTransfer.EXECUTOR, () -> transfer.prepare(vault.cells))
+                .whenComplete((prepared, error) -> server.execute(() -> {
+                    if (ServerLifecycleHooks.getCurrentServer() != server || vaults.get(vaultId) != vault
+                            || !session.equals(playerSessions.get(uuid)) || vault.initialSyncs.get(uuid) != transfer) return;
+                    vault.initialSyncs.remove(uuid);
+                    if (error != null || transfer.cancelled) return; // retry, still awaiting a snapshot
+                    // All packets are already serialized. Deliver the entire sync now,
+                    // not paced across ticks; splitting only obeys Minecraft's size cap.
+                    for (byte[] data : prepared.packets()) {
+                        VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new S2CSyncPacket(session, data));
+                    }
+                    for (byte[] data : transfer.changes.values()) {
+                        VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new S2CSyncPacket(session, data));
+                    }
+                    VaultMapperChannel.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                            new S2CVaultSyncEndPacket(session, prepared.cellCount()));
+                    vault.awaitingSnapshot.remove(uuid);
+                    vault.latestMoves.forEach((otherUUID, move) -> {
+                        if (!otherUUID.equals(uuid)) sendToPlayer(player, move);
+                    });
+                }));
     }
 
     private static void sweepStaleVaults() {
         long now = System.currentTimeMillis();
         long retentionMs = Math.max(0, ServerConfig.EMPTY_VAULT_RETENTION_HOURS.get()) * 3_600_000L;
-        vaults.entrySet().removeIf(entry -> {
-            SyncVault vault = entry.getValue();
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        vaults.forEach((id, vault) -> {
             // skip vaults mid-flush - wiping their files now would race the running write
             boolean stale = vault.players.isEmpty() && vault.emptySince > 0 && now - vault.emptySince > retentionMs
-                    && !vault.flushInFlight.get();
-            if (stale) {
-                VaultMapper.LOGGER.debug("Dropping empty vault sync {}", entry.getKey());
-                VaultSaveStore.deleteSave(entry.getKey(), vault);
+                    && vault.loaded && !vault.flushInFlight.get();
+            if ((stale || vault.retiring) && !vault.deleteInFlight) {
+                VaultMapper.LOGGER.debug("Dropping empty vault sync {}", id);
+                retireVault(id, vault, () -> VaultSaveStore.deleteSave(id, vault, VaultSaveStore.getVaultDir()),
+                        server::execute, () -> startLoad(id, vault, server));
             }
-            return stale;
         });
-        VaultSaveStore.sweepIndexedVaultFiles(now, retentionMs, vaults.keySet());
+        VaultSaveStore.sweepAsync(now, retentionMs, vaults.keySet());
+    }
+
+    static void retireVault(String id, SyncVault vault, Supplier<CompletableFuture<Void>> deletion,
+                            Executor serverExecutor, Runnable reload) {
+        vault.retiring = true;
+        vault.deleteInFlight = true;
+        vault.loaded = false;
+        vault.recoveryComplete = false; // shutdown must not resurrect this expired map
+        deletion.get().whenComplete((value, failure) -> serverExecutor.execute(() -> {
+            if (vaults.get(id) != vault) return;
+            vault.deleteInFlight = false;
+            if (failure != null) {
+                VaultMapper.LOGGER.warn("Failed retiring vault sync {} (will retry): {}", id, failure.toString());
+            } else if (vault.players.isEmpty()) {
+                vaults.remove(id, vault);
+            } else {
+                vault.retiring = false;
+                reload.run(); // a join during cleanup waits for a fresh recovery
+            }
+        }));
     }
 
     @SubscribeEvent
@@ -302,9 +399,8 @@ public class VaultSyncManager {
     public static void onServerStarted(ServerStartedEvent event) {
         long now = System.currentTimeMillis();
         long retentionMs = Math.max(0, ServerConfig.EMPTY_VAULT_RETENTION_HOURS.get()) * 3_600_000L;
-        // prune expired save files left over from previous runs, then index what's left
-        VaultSaveStore.sweepVaultFilesOnDisk(now, retentionMs, vaults.keySet());
-        VaultSaveStore.rebuildIndex();
+        // Queue cleanup before the first recovery; neither blocks server ticks.
+        VaultSaveStore.sweepAsync(now, retentionMs, vaults.keySet());
     }
 
     // move flushes run every tick; journal flushes and stale sweeping once a minute
@@ -313,6 +409,11 @@ public class VaultSyncManager {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
+        vaults.forEach((id, vault) -> {
+            if (vault.loaded && !vault.awaitingSnapshot.isEmpty()) {
+                sendWaitingSnapshots(id, vault, ServerLifecycleHooks.getCurrentServer());
+            }
+        });
         long intervalNanos = moveIntervalNanos();
         if (intervalNanos > 0) {
             long now = System.nanoTime();
@@ -327,7 +428,10 @@ public class VaultSyncManager {
         if (nowMillis - lastHousekeepingMillis >= HOUSEKEEPING_INTERVAL_MS) {
             lastHousekeepingMillis = nowMillis;
             vaults.forEach((vaultId, vault) -> {
-                if (vault.walPending >= WAL_FLUSH_THRESHOLD && nowMillis >= vault.nextFlushAllowedMillis
+                if (!vault.loaded && !vault.retiring && !vault.loadInFlight && nowMillis >= vault.nextLoadAllowedMillis) {
+                    startLoad(vaultId, vault, ServerLifecycleHooks.getCurrentServer());
+                }
+                if (vault.loaded && vault.walPending >= WAL_FLUSH_THRESHOLD && nowMillis >= vault.nextFlushAllowedMillis
                         && vault.flushInFlight.compareAndSet(false, true)) {
                     VaultSaveStore.flushAsync(vaultId, vault);
                 }
@@ -338,25 +442,13 @@ public class VaultSyncManager {
 
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
-        // make sure no journal handle survives the stop, even if a flush below bails out
-        VaultSaveStore.closeAllJournals(vaults);
-
-        // final flush attempt for every vault: snapshots are built from memory, so this
-        // also persists cells whose journal append failed earlier
-        vaults.forEach((vaultId, vault) -> {
-            if (vault.flushInFlight.compareAndSet(false, true)) {
-                VaultSaveStore.flushAsync(vaultId, vault);
-            }
-        });
-
-        // drain the pending flushes before the world (or JVM) goes away, so an
-        // integrated-server restart can't watch an old task still writing files
-        // while the new server is already reading them
-        VaultSaveStore.awaitFlushDrain();
+        // Finish prior saves, then persist the latest memory state before clearing it.
+        VaultSaveStore.flushAllAtShutdown(vaults, VaultSaveStore::flushAsync);
 
         lastHousekeepingMillis = 0; // let a quickly restarted server housekeep right away
         vaults.clear();
         playerVaults.clear();
-        VaultSaveStore.clearIndex();
+        playerSessions.clear();
+        playerSources.clear();
     }
 }

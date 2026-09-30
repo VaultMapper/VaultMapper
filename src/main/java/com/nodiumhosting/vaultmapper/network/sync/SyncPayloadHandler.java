@@ -55,6 +55,9 @@ public class SyncPayloadHandler {
                 VaultCell cell = cellFromPacket(data);
 
                 VaultMap.addOrReplaceCell(cell);
+                if (VaultMap.syncClient instanceof ForgeSyncConnection connection) {
+                    connection.onVaultChunkReceived(Set.of(cell.x + "," + cell.z));
+                }
             }
             case PLAYER_DISCONNECT -> {
                 var data = msg.getPlayerDisconnect();
