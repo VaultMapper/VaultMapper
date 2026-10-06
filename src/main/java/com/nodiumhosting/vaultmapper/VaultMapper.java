@@ -3,10 +3,13 @@ package com.nodiumhosting.vaultmapper;
 import com.mojang.logging.LogUtils;
 import com.nodiumhosting.vaultmapper.commands.VaultMapperCommand;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
+import com.nodiumhosting.vaultmapper.config.ServerConfig;
 import com.nodiumhosting.vaultmapper.events.KeybindEvents;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
+import com.nodiumhosting.vaultmapper.network.VaultMapperChannel;
 import com.nodiumhosting.vaultmapper.util.UpdateChecker;
 import com.nodiumhosting.vaultmapper.util.Util;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -35,6 +38,7 @@ public class VaultMapper {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC, MODID + "-client.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ServerConfig.SPEC, MODID + "-server.toml");
     }
 
     public static String getVersion() {
@@ -56,6 +60,8 @@ public class VaultMapper {
     private void setup(final FMLCommonSetupEvent event) {
         LOGGER.info("hallo! (VaultMapper)");
 
+        // channel for the server side sync
+        event.enqueueWork(VaultMapperChannel::register);
     }
 
     @SubscribeEvent
@@ -70,7 +76,7 @@ public class VaultMapper {
         VaultMapOverlayRenderer.prep();
     }
 
-    @Mod.EventBusSubscriber(modid = VaultMapper.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+    @Mod.EventBusSubscriber(modid = VaultMapper.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ModEventListener {
         @SubscribeEvent
         public static void registerClientCommands(RegisterClientCommandsEvent event) {

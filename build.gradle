@@ -211,6 +211,18 @@ dependencies {
     // For more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+}
+
+test {
+    useJUnitPlatform()
+    // ForgeGradle keeps Minecraft and its libraries off the test classpath by default;
+    // tests touch classes whose signatures reference Minecraft classes
+    classpath += configurations.minecraft + configurations.minecraftLibrary
+    testLogging {
+        events "passed", "failed", "skipped"
+    }
 }
 
 /*def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta']

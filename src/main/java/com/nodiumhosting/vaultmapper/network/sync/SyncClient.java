@@ -4,15 +4,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.nodiumhosting.vaultmapper.VaultMapper;
 import com.nodiumhosting.vaultmapper.config.ClientConfig;
-import com.nodiumhosting.vaultmapper.gui.ToastMessageManager;
 import com.nodiumhosting.vaultmapper.map.VaultCell;
 import com.nodiumhosting.vaultmapper.map.VaultMap;
 import com.nodiumhosting.vaultmapper.map.VaultMapOverlayRenderer;
-import com.nodiumhosting.vaultmapper.proto.Color;
 import com.nodiumhosting.vaultmapper.proto.Message;
 import com.nodiumhosting.vaultmapper.proto.MessageType;
 import com.nodiumhosting.vaultmapper.proto.VaultPlayer;
-import com.nodiumhosting.vaultmapper.util.Util;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
@@ -21,30 +18,74 @@ import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class SyncClient extends WebSocketClient {
+public class SyncClient extends WebSocketClient implements ISyncConnection {
+    private static final long TICK_MS = 2000;
+    private static final long KEEPALIVE_MS = 10000;
+    private static final long INITIAL_RETRY_MS = 2000;
+    private static final long MAX_RETRY_MS = 60000;
+    private static final long CONNECT_ATTEMPT_TIMEOUT_MS = 30000;
+
     private final Timer keepConnectedTimer = new Timer();
     private final SyncClient self;
     MovePacket old_data = new MovePacket("", "", 0, 0, 0);
-    private boolean keepMeOn = false;
+    private volatile boolean keepMeOn = true; // written on the main thread in closeGracefully(), read on the timer thread
+
+    // the fields below are only accessed on the timer thread
+    private boolean wasOpen = false;
+    private int retryAttempt = 0;
+    private long nextRetryAt = 0;
+    private long attemptStartedAt = System.currentTimeMillis();
+    private long lastKeepalive = 0;
 
     public SyncClient(String playerUUID, String vaultID) {
-        super(URI.create(ClientConfig.VMSYNC_SERVER.get() + "/?vaultID=" + vaultID + "&uuid=" + playerUUID)); //TODO: add check whether server is even online
+        super(URI.create(ClientConfig.VMSYNC_SERVER.get() + "/?vaultID=" + vaultID + "&uuid=" + playerUUID));
 
         self = this;
 
-        int timerPeriod = 10000;
         keepConnectedTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (keepMeOn) { // if connected
-                    if (self.isOpen()) { // if socket is open
-                        sendKeepalive();
+                try {
+                    if (!keepMeOn) return;
+                    boolean open = self.isOpen();
+                    if (open) {
+                        if (!wasOpen) {
+                            // just (re)connected - reset the backoff
+                            retryAttempt = 0;
+                            nextRetryAt = 0;
+                        }
+                        long now = System.currentTimeMillis();
+                        if (now - lastKeepalive >= KEEPALIVE_MS) {
+                            lastKeepalive = now;
+                            sendKeepalive();
+                        }
                     } else {
-                        self.reconnect(); // if socket closed, try to reconnect non-blocking
+                        long now = System.currentTimeMillis();
+                        if (self.isClosed() && now >= nextRetryAt) {
+                            // previous attempt failed - retry with exponential backoff
+                            retryConnection(now);
+                        } else if (!self.isClosing() && now - attemptStartedAt > CONNECT_ATTEMPT_TIMEOUT_MS) {
+                            // attempt in flight is stuck (e.g. server accepts TCP but never responds) - abort and retry
+                            retryConnection(now);
+                        }
+                        // otherwise an attempt is still in flight - let it finish
                     }
+                    wasOpen = open;
+                } catch (Exception e) {
+                    // keep the timer alive even if a tick fails
+                    VaultMapper.LOGGER.error("Sync WS keep-alive/reconnect error: " + e);
                 }
             }
-        }, timerPeriod, timerPeriod);
+
+            // timer thread only
+            private void retryConnection(long now) {
+                retryAttempt++;
+                long delay = Math.min(MAX_RETRY_MS, INITIAL_RETRY_MS * (1L << Math.min(retryAttempt - 1, 10)));
+                nextRetryAt = now + delay;
+                attemptStartedAt = now;
+                self.reconnect(); // non-blocking
+            }
+        }, TICK_MS, TICK_MS);
     }
 
     public void sendKeepalive() {
@@ -60,96 +101,18 @@ public class SyncClient extends WebSocketClient {
 //        VaultMapper.LOGGER.info("Sync WS Connected");
         keepMeOn = true;
         VaultMapOverlayRenderer.syncErrorState = false;
+        // note: the retry backoff is reset on the timer thread when it next ticks (single-thread confinement)
     }
 
     @Override
     public void onMessage(ByteBuffer buf) {
         try {
             var msg = Message.parseFrom(buf);
-            switch (msg.getType()) {
-                case VAULT -> {
-                    var data = msg.getVault();
-                    for (var cell : data.getCellsList()) {
-                        VaultCell vaultCell = CellFromPacket(cell);
-
-                        VaultMap.addOrReplaceCell(vaultCell);
-                    }
-                }
-                case VAULT_PLAYER -> {
-                    var data = msg.getVaultPlayer();
-                    var uuid = data.getUuid();
-                    var color = data.getColor();
-                    var x = data.getX();
-                    var z = data.getZ();
-                    var yaw = data.getYaw();
-
-                    String red = Integer.toHexString(color.getR());
-                    String green = Integer.toHexString(color.getG());
-                    String blue = Integer.toHexString(color.getB());
-                    String paddedRed = red.length() == 1 ? "0" + red : red;
-                    String paddedGreen = green.length() == 1 ? "0" + green : green;
-                    String paddedBlue = blue.length() == 1 ? "0" + blue : blue;
-                    String hex = "#" + paddedRed + paddedGreen + paddedBlue;
-
-                    VaultMap.updatePlayerMapData(uuid, hex, x, z, yaw);
-                }
-                case VAULT_CELL -> {
-                    var data = msg.getVaultCell();
-                    VaultCell cell = CellFromPacket(data);
-
-                    VaultMap.addOrReplaceCell(cell);
-                }
-                case PLAYER_DISCONNECT -> {
-                    var data = msg.getPlayerDisconnect();
-
-                    VaultMap.removePlayerMapData(data.getUuid());
-                }
-                case TOAST -> {
-                    var data = msg.getToast();
-                    ToastMessageManager.displayToast(data.getMessage());
-                }
-                case VIEWER_CODE -> {
-                    var data = msg.getViewerCode();
-                    VaultMap.viewerCode = data.getCode();
-                }
-                default -> {
-                    VaultMapper.LOGGER.info("Something weird with onMessage");
-                }
-            }
+            SyncPayloadHandler.handle(msg);
         } catch (Exception e) {
             VaultMapper.LOGGER.error("Sync WS Error: " + e);
         }
     }
-
-    private VaultCell CellFromPacket(com.nodiumhosting.vaultmapper.proto.VaultCell data) {
-        var x = data.getX();
-        var z = data.getZ();
-        var cellType = data.getCellType();
-        var roomType = data.getRoomType();
-
-        var cell = new VaultCell(x, z, cellType, roomType);
-
-        cell.roomName = data.getRoomName();
-        cell.explored = data.getExplored();
-        cell.inscripted = data.getInscribed();
-        cell.marked = data.getMarked();
-
-        return cell;
-    }
-
-    private com.nodiumhosting.vaultmapper.proto.VaultCell PCellFromCell(VaultCell cell) {
-        return com.nodiumhosting.vaultmapper.proto.VaultCell.newBuilder()
-                .setX(cell.x)
-                .setZ(cell.z)
-                .setCellType(cell.cellType)
-                .setRoomType(cell.roomType)
-                .setRoomName(cell.roomName)
-                .setExplored(cell.explored)
-                .setInscribed(cell.inscripted)
-                .setMarked(cell.marked)
-                .build();
-    }
-
 
     @Override
     public void onMessage(String message) {
@@ -189,35 +152,25 @@ public class SyncClient extends WebSocketClient {
         VaultMapper.LOGGER.error("Sync WS Error: " + ex.toString());
     }
 
+    @Override
     public void closeGracefully() {
         keepMeOn = false;
         keepConnectedTimer.cancel();
         this.close();
     }
 
+    @Override
     public void sendCellPacket(VaultCell cell) {
         if (this.isOpen()) {
             this.send(Message.newBuilder()
                     .setType(MessageType.VAULT_CELL)
-                    .setVaultCell(PCellFromCell(cell))
+                    .setVaultCell(SyncPayloadHandler.cellToPacket(cell))
                     .build()
                     .toByteArray());
         }
     }
 
-    private Color getSyncColor() {
-        String col = ClientConfig.SYNC_COLOR.get();
-        if (col.equals("random")) {
-            col = Util.RandomColor();
-            ClientConfig.SYNC_COLOR.set(col);
-        }
-        int R = Integer.parseInt(col.substring(1, 3), 16);
-        int G = Integer.parseInt(col.substring(3, 5), 16);
-        int B = Integer.parseInt(col.substring(5, 7), 16);
-
-        return Color.newBuilder().setR(R).setG(G).setB(B).build();
-    }
-
+    @Override
     public void sendMovePacket(String name, int cellX, int cellZ, float rotation) {
         if (this.isOpen()) {
             MovePacket data = new MovePacket(name, "", cellX, cellZ, rotation); // legacy, remove and reimplement optimalization
@@ -231,7 +184,7 @@ public class SyncClient extends WebSocketClient {
                                 .setX(cellX)
                                 .setZ(cellZ)
                                 .setYaw(rotation)
-                                .setColor(getSyncColor())
+                                .setColor(SyncPayloadHandler.getSyncColor())
                                 .build())
                         .build()
                         .toByteArray()
