@@ -11,6 +11,6 @@ Do you have trouble navigating the vaults and often get lost? Are you tired of h
 
 This mod adds an on-screen minimap showing all the rooms you have explored in the vault you're currently in as well as all special rooms added by using inscriptions on your vault crystal. Plus, there are even more features that we are planning to add in the future.
 
-The mod is currently fully client-sided, however you should get permission from server admins and other players before using it on a server.
+Since version 1.11, the mod can work both as client-side only through a public sync server or with a forge server-side sync (the same mod file). If you plan to use the client-side option, you should still get permission from the server admins and other players before using it on the server.
 
 Development Discord Server: https://discord.gg/jq47BD9hS2
